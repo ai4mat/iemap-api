@@ -1,5 +1,7 @@
 # VS Code Local-History directory and files
 /.lh
+# VS Code settings
+.vscode
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
