@@ -22,7 +22,7 @@ app.include_router(ItemRouter, tags=["Items"], prefix="/api")
 
 @app.get("/api", tags=["Root"])
 async def read_root():
-    return {"message": "Welcome to the Open Digital Heritage API"}
+    return {"message": "Welcome to the IEMAP API"}
 
 
 @app.api_route("/{path_name:path}", methods=["GET"])
