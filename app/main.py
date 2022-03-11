@@ -1,5 +1,5 @@
 import uvicorn
-from app.log_config import logging_config
+from log_config import logging_config
 from dotenv import dotenv_values
 
 config = {
