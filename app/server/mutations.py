@@ -25,9 +25,11 @@ async def resolve_create_message(obj, info, content, sender_id, recipient_id):
 @convert_kwargs_to_snake_case
 async def resolve_create_user(obj, info, username):
     try:
-        if not users.get(username):
+        isYetInStore = len(
+            list(filter(lambda u: u['username'] == username, users))) > 0
+        if not isYetInStore:
             user = {"user_id": len(users) + 1, "username": username}
-            users[username] = user
+            users.append(user)
             return {"success": True, "user": user}
         return {"success": False, "errors": ["Username is taken"]}
 
