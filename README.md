@@ -1,4 +1,4 @@
-# Mission Innovation RETSful API
+# IEMAP RESTful/GraphQL API
 
 This API allow you to do some CRUD operation with RESTful methods over the Mission Innovation mongoDB.
 
@@ -50,7 +50,7 @@ curl http://0.0.0.0:8000/api
 If all is working properly, you'll get this output:
 
 ```json
-{ "message": "Welcome to the Mission Innovation API" }
+{ "message": "Welcome to the IEMAP API" }
 ```
 
 ## Check documentation
