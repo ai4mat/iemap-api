@@ -5,6 +5,25 @@ from server.routes.items import router as ItemRouter
 
 from fastapi.middleware.cors import CORSMiddleware
 
+
+from ariadne import make_executable_schema, load_schema_from_path, \
+    snake_case_fallback_resolvers
+from ariadne.asgi import GraphQL
+from server.mutations import mutation
+from server.queries import query
+from server.subscriptions import subscription
+
+from os.path import dirname, abspath, join
+
+dirname = dirname(dirname(abspath(__file__)))
+
+type_defs = load_schema_from_path(join(dirname, './graphql/schema.graphql'))
+
+schema = make_executable_schema(type_defs, query, mutation, subscription,
+                                snake_case_fallback_resolvers)
+
+graphql_app = GraphQL(schema, debug=True)
+
 app = FastAPI(openapi_url="/api/openapi.json",
               docs_url="/api/docs",
               redoc_url=None)
@@ -17,6 +36,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_route('/graphql', graphql_app)
 app.include_router(ItemRouter, tags=["Items"], prefix="/api")
 
 
