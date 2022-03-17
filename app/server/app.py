@@ -53,7 +53,7 @@ async def catch_all(request: Request, path_name: str):
         "path_name":
         path_name,
         "message":
-        "Reply from Open Digital Heritage API at " +
+        "Reply from IEMAP API at " +
         #  naturaltime(date=datetime.now())
         datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     }
