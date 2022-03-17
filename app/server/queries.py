@@ -1,7 +1,15 @@
+from datetime import datetime
 from ariadne import ObjectType, convert_kwargs_to_snake_case
 from server.store import messages, users
 
 query = ObjectType("Query")
+
+
+@query.field("health")
+def resolve_hello(*_):
+    return "Reply from IEMAP GraphQL(Ariadne) at " + datetime.utcnow(
+    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    #  naturaltime(date=datetime.now())
 
 
 @query.field("messages")
