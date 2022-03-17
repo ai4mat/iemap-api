@@ -91,7 +91,9 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 [FASTAPI + GraphQL Ariadne Example](https://github.com/obytes/FastQL)
 [GraphQL in the Python World](https://www.youtube.com/watch?v=p7VujaALaGQ)  
 [Building An Instagram Clone With GraphQL and Auth0](https://auth0.com/blog/building-an-instagram-clone-with-graphql-and-auth0/)  
-[GraphQL file uploads - evaluating the 5 most common approaches](https://wundergraph.com/blog/graphql_file_uploads_evaluating_the_5_most_common_approaches)
+[GraphQL file uploads - evaluating the 5 most common approaches](https://wundergraph.com/blog/graphql_file_uploads_evaluating_the_5_most_common_approaches)  
+[Fetching data](https://hasura.io/learn/graphql/vue/intro-to-graphql/2-fetching-data-queries/)  
+[Hasura GrapQL tutorials](https://hasura.io/learn/)
 
 ### ML FASTAPI
 
