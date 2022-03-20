@@ -15,9 +15,9 @@ config = {
 }
 upload_dir = config["FILESDIR"]  # dir is "uploaded" set in .env.shared
 
-allowed_format = json.loads(
-    config["ALLOWED_FORMAT_UPLOAD"]
-)  #  [".txt", ".pdf", ".docx", ".csv",".zip"] set in .env.shared
+# allowed_format = json.loads(
+#     config["ALLOWED_FORMAT_UPLOAD"]
+# )  #  [".txt", ".pdf", ".docx", ".csv",".zip"] set in .env.shared
 
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 allowed_mime_types = [
@@ -28,6 +28,8 @@ allowed_mime_types = [
 
 @router.post("/upload", response_description="Items retrieved")
 async def create_upload_file(file: UploadFile = File(...)):
+    if file.content_type not in allowed_mime_types:
+        raise HTTPException(400, detail="Invalid document type")
 
     file_to_write = f"{upload_dir}/{file.filename}"
     with open(file_to_write, "wb+") as file_object:
@@ -44,8 +46,7 @@ async def create_upload_file(file: UploadFile = File(...)):
 
 
 @router.post("/uploadandhashing", response_description="Items retrieved")
-async def create_upload_file(file: UploadFile = File(...,
-                                                     format=allowed_format)):
+async def create_upload_file(file: UploadFile = File(...)):
     if file.content_type not in allowed_mime_types:
         raise HTTPException(400, detail="Invalid document type")
     file_to_write = f"{upload_dir}/{file.filename}"
