@@ -18,4 +18,7 @@ uvicorn==0.16.0
 uvloop==0.16.0
 watchgod==0.7
 websockets==10.1
-ariadne== 0.14.1
+ariadne==0.14.1
+fastapi-versioning==0.10.0
+python-multipart==0.0.5
+aiofiles==0.8.0
