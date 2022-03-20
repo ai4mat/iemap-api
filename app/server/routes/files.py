@@ -1,7 +1,9 @@
-from fastapi import APIRouter, UploadFile, File
+import hashlib
+import json
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
 from server.utils.hashing_file import hash_file
-from os import getcwd, remove, path
+from os import getcwd, remove, rename, path
 from dotenv import dotenv_values
 
 import aiofiles
@@ -11,7 +13,17 @@ router = APIRouter()
 config = {
     **dotenv_values(".env.shared"),  # load shared development variables
 }
-upload_dir = config["FILESDIR"]
+upload_dir = config["FILESDIR"]  # dir is "uploaded" set in .env.shared
+
+allowed_format = json.loads(
+    config["ALLOWED_FORMAT_UPLOAD"]
+)  #  [".txt", ".pdf", ".docx", ".csv",".zip"] set in .env.shared
+
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+allowed_mime_types = [
+    "text/csv", "application/zip", "application/pdf", "text/plain",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+]
 
 
 @router.post("/upload", response_description="Items retrieved")
@@ -29,6 +41,24 @@ async def create_upload_file(file: UploadFile = File(...)):
     # compute hash of file
     hash = hash_file(file_to_write)
     return {"info": f"file '{file.filename}' hash: {hash}"}
+
+
+@router.post("/uploadandhashing", response_description="Items retrieved")
+async def create_upload_file(file: UploadFile = File(...,
+                                                     format=allowed_format)):
+    if file.content_type not in allowed_mime_types:
+        raise HTTPException(400, detail="Invalid document type")
+    file_to_write = f"{upload_dir}/{file.filename}"
+    h = hashlib.sha1()
+    with open(file_to_write, "wb+") as file_object:
+        content = file.file.read()
+        h.update(content)
+        hash = h.hexdigest()
+        file_object.write(file.file.read())
+        ext = file.filename.split(".")[-1]
+        rename(file_to_write, f"{upload_dir}/{hash}.{ext}")
+
+        return {"info": f"file '{file.filename}' hash: {hash}"}
 
 
 @router.get("/file/{name_file}")
