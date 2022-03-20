@@ -76,6 +76,9 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 [Implementing FastAPI Services – Abstraction and Separation of Concerns](https://camillovisini.com/article/abstracting-fastapi-services/)  
 [Python API Tutorials](https://realpython.com/tutorials/api/)  
 [FastAPI Tutorial - Building RESTful APIs with Python](https://www.youtube.com/watch?v=GN6ICac3OXY9)
+[FASTAPI Project structure and versioning](https://christophergs.com/tutorials/ultimate-fastapi-tutorial-pt-8-project-structure-api-versioning/)  
+[FAST API versioning using fastapi-versioning](https://medium.com/geoblinktech/fastapi-with-api-versioning-for-data-applications-2b178b0f843f)  
+[How to save UploadFile in FastAPI(stackoverflow)](https://stackoverflow.com/questions/63580229/how-to-save-uploadfile-in-fastapi)
 
 ## Logging
 
