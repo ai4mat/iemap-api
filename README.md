@@ -16,7 +16,7 @@ Use the `env.sample` to setup your mongoDB URI and save it as `.env`.
    ```bash
    python3 -m venv $ENV_BASE_DIR/$ENVIRONMENT_NAME
    cd $ENV_BASE_DIR; virtualenv $ENVIRONMENT_NAME
-   cd <path/to/>/opendigitalheritage-api
+   cd <path/to/>/mi-api
    pip install -r requirements.txt
    ```
    where:
