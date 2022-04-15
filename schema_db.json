@@ -55,7 +55,7 @@
     },
     "properties": [
       {
-        "name": "H2o",
+        "name": "H2O",
         "type": "2D",
         "axis": { "labelX": "Wavelength", "labelY": "Transmittance" },
         "value": 255.89,
