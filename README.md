@@ -114,3 +114,13 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 [FASTAPI on NGINX UNIT](https://levelup.gitconnected.com/deploying-an-asynchronous-fastapi-on-nginx-unit-b038288bec5)
 [FASTAPI + NGINX + PM2](https://www.travisluong.com/how-to-deploy-fastapi-with-nginx-and-pm2/)  
 [Deploy FastAPI with Hypercorn HTTP/2 ASGI](https://levelup.gitconnected.com/deploy-fastapi-with-hypercorn-http-2-asgi-8cfc304e9e7a)
+
+#### Pydantic
+
+> to generate a Pydantic model from a JSON schema use
+> `datamodel-codegen --input schema_db.json --input-file-type jsonschema --output model_iemap.py`
+> a schema can be generated online from a JSON file using:
+> [Free Online JSON to JSON Schema Converte](https://www.liquid-technologies.com/online-json-to-schema-converter)  
+> [JSON SCHEMA TOOL](https://www.jsonschema.net/home)  
+> [Tools to generate json schema](https://stackoverflow.com/questions/7341537/tool-to-generate-json-schema-from-json-data)  
+>  [PyDantic datamodel code generator](https://pydantic-docs.helpmanual.io/datamodel_code_generator/)
