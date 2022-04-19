@@ -1,96 +1,458 @@
 {
-  "_id": { "$oid": "6257b7bc85b638709d3335f0" },
-  "createdAt": { "$date": "2022-04-13T22:08:00.000Z" },
-  "updatedAt": { "$date": "2022-04-12T00:08:40.000Z" },
-  "user": {
-    "email": "nome.cognome@enea.it",
-    "affiliation": "ENEA"
-  },
-  "project": {
-    "name": "Progetto IEMAP1",
-    "description": "Descrizione estesa",
-    "label": "Descrizione breve"
-  },
-
-  "process": {
-    "isExperiment": true,
-    "isSimulation": true,
-    "parameters": [{ "name": "param1", "type": "type 1", "value": 45465.9 }],
-    "calculation": {
-      "method": "method1",
-      "swAgent": { "name": "Orcad", "version": "1.0.5" }
-    },
-    "experiment": {
-      "method": "exp method 1",
-      "swAgent": { "name": "software1", "version": "4.7" }
-    },
-    "material": {
-      "formula": "fasjkhfgkasjhgf",
-      "elements": ["Zn", "O"],
-      "chemicalComposition": [{ "element": "O2", "percentage": "20%" }],
-      "input": {
-        "lattice": {
-          "a": "11.050",
-          "b": "10365",
-          "c": "5.635",
-          "alpha": "81.59",
-          "beta": "68.114",
-          "gamma": "30296"
-        },
-        "sites": "[ [x1,y1,z1], [x2, y2, z2], [x3, y3, z3] ]",
-        "species": "[H,H,H]"
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "_id": {
+      "type": "object",
+      "properties": {
+        "$oid": {
+          "type": "string"
+        }
       },
-      "output": {
-        "lattice": {
-          "a": "11.050",
-          "b": "10365",
-          "c": "5.635",
-          "alpha": "81.59",
-          "beta": "68.114",
-          "gamma": "30296"
-        },
-        "sites": "[ [x1,y1,z1], [x2, y2, z2], [x3, y3, z3] ]",
-        "species": "[H,H,H]"
-      }
+      "required": ["$oid"]
     },
-    "properties": [
-      {
-        "name": "H2O",
-        "type": "2D",
-        "axis": { "labelX": "Wavelength", "labelY": "Transmittance" },
-        "value": 255.89,
-        "units": { "x": "UnitX", "y": "UnitY" },
-        "file": {
-          "hash": "owiuqpiqutp",
-          "extention": "CSV",
-          "size": "200Kb",
-          "createdAt": { "$date": "2022-04-24T22:00:00.000Z" },
-          "updatedAt": { "$date": "2022-04-24T22:00:00.000Z" }
+    "createdAt": {
+      "type": "object",
+      "properties": {
+        "$date": {
+          "type": "string"
+        }
+      },
+      "required": ["$date"]
+    },
+    "updatedAt": {
+      "type": "object",
+      "properties": {
+        "$date": {
+          "type": "string"
+        }
+      },
+      "required": ["$date"]
+    },
+    "user": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
         },
-        "isCalculated": true,
-        "isPhysical": true
-      }
-    ],
-    "iemapID": "iemap-1"
-  },
-  "files": [
-    {
-      "hash": "jhfslajfhslakjhflkasjhfoiruy",
-      "description": "Esperimento su batterie condotto con tecnica..",
-      "name": "File esperimento 1",
-      "extention": "pdf",
-      "type": "[Code | Tabular | Image | Raw Instrument Data]",
-      "isProcessed": false,
-      "size": "10Mb",
-      "createdAt": { "$date": "2022-04-13T22:00:00.000Z" },
-      "updatedAt": { "$date": "2022-04-12T22:00:00.000Z" },
-      "publication": {
-        "name": "Research paper",
-        "date": { "$date": "2022-04-30T22:00:00.000Z" },
-        "url": "https://elsevier/fjhasgjhdf"
-      }
+        "affiliation": {
+          "type": "string"
+        }
+      },
+      "required": ["email", "affiliation"]
+    },
+    "project": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": ["name", "description", "label"]
+    },
+    "process": {
+      "type": "object",
+      "properties": {
+        "isExperiment": {
+          "type": "boolean"
+        },
+        "isSimulation": {
+          "type": "boolean"
+        },
+        "parameters": {
+          "type": "array",
+          "items": [
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                }
+              },
+              "required": ["name", "type", "value"]
+            }
+          ]
+        },
+        "calculation": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "swAgent": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": ["name", "version"]
+            }
+          },
+          "required": ["method", "swAgent"]
+        },
+        "experiment": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "swAgent": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": ["name", "version"]
+            }
+          },
+          "required": ["method", "swAgent"]
+        },
+        "material": {
+          "type": "object",
+          "properties": {
+            "formula": {
+              "type": "string"
+            },
+            "elements": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "chemicalComposition": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "element": {
+                      "type": "string"
+                    },
+                    "percentage": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["element", "percentage"]
+                }
+              ]
+            },
+            "input": {
+              "type": "object",
+              "properties": {
+                "lattice": {
+                  "type": "object",
+                  "properties": {
+                    "a": {
+                      "type": "string"
+                    },
+                    "b": {
+                      "type": "string"
+                    },
+                    "c": {
+                      "type": "string"
+                    },
+                    "alpha": {
+                      "type": "string"
+                    },
+                    "beta": {
+                      "type": "string"
+                    },
+                    "gamma": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["a", "b", "c", "alpha", "beta", "gamma"]
+                },
+                "sites": {
+                  "type": "string"
+                },
+                "species": {
+                  "type": "string"
+                }
+              },
+              "required": ["lattice", "sites", "species"]
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "lattice": {
+                  "type": "object",
+                  "properties": {
+                    "a": {
+                      "type": "string"
+                    },
+                    "b": {
+                      "type": "string"
+                    },
+                    "c": {
+                      "type": "string"
+                    },
+                    "alpha": {
+                      "type": "string"
+                    },
+                    "beta": {
+                      "type": "string"
+                    },
+                    "gamma": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["a", "b", "c", "alpha", "beta", "gamma"]
+                },
+                "sites": {
+                  "type": "string"
+                },
+                "species": {
+                  "type": "string"
+                }
+              },
+              "required": ["lattice", "sites", "species"]
+            }
+          },
+          "required": [
+            "formula",
+            "elements",
+            "chemicalComposition",
+            "input",
+            "output"
+          ]
+        },
+        "properties": {
+          "type": "array",
+          "items": [
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "axis": {
+                  "type": "object",
+                  "properties": {
+                    "labelX": {
+                      "type": "string"
+                    },
+                    "labelY": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["labelX", "labelY"]
+                },
+                "value": {
+                  "type": "number"
+                },
+                "units": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "string"
+                    },
+                    "y": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["x", "y"]
+                },
+                "file": {
+                  "type": "object",
+                  "properties": {
+                    "hash": {
+                      "type": "string"
+                    },
+                    "extention": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "object",
+                      "properties": {
+                        "$date": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["$date"]
+                    },
+                    "updatedAt": {
+                      "type": "object",
+                      "properties": {
+                        "$date": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["$date"]
+                    }
+                  },
+                  "required": [
+                    "hash",
+                    "extention",
+                    "size",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                },
+                "isCalculated": {
+                  "type": "boolean"
+                },
+                "isPhysical": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "axis",
+                "value",
+                "units",
+                "file",
+                "isCalculated",
+                "isPhysical"
+              ]
+            }
+          ]
+        },
+        "iemapID": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "isExperiment",
+        "isSimulation",
+        "parameters",
+        "calculation",
+        "experiment",
+        "material",
+        "properties",
+        "iemapID"
+      ]
+    },
+    "files": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "hash": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "extention": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "isProcessed": {
+              "type": "boolean"
+            },
+            "size": {
+              "type": "string"
+            },
+            "createdAt": {
+              "type": "object",
+              "properties": {
+                "$date": {
+                  "type": "string"
+                }
+              },
+              "required": ["$date"]
+            },
+            "updatedAt": {
+              "type": "object",
+              "properties": {
+                "$date": {
+                  "type": "string"
+                }
+              },
+              "required": ["$date"]
+            },
+            "publication": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "date": {
+                  "type": "object",
+                  "properties": {
+                    "$date": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["$date"]
+                },
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": ["name", "date", "url"]
+            }
+          },
+          "required": [
+            "hash",
+            "description",
+            "name",
+            "extention",
+            "type",
+            "isProcessed",
+            "size",
+            "createdAt",
+            "updatedAt",
+            "publication"
+          ]
+        }
+      ]
+    },
+    "_v": {
+      "type": "string"
+    },
+    "projectWP": {
+      "type": "string"
     }
-  ],
-  "_v": "1.0",
-  "projectWP": "WP Battery Test"
+  },
+  "required": [
+    "_id",
+    "createdAt",
+    "updatedAt",
+    "user",
+    "project",
+    "process",
+    "files",
+    "_v",
+    "projectWP"
+  ]
 }
