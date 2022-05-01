@@ -43,15 +43,15 @@ app.include_router(api_router, prefix=Config.api_v1_str)
 
 
 # CATCH ALL ROUTE IT NEEDS TO BE LAST
-# @app.api_route("/{path_name:path}", methods=["GET"])
-# async def catch_all(request: Request, path_name: str):
-#     return {
-#         "request_method": request.method,
-#         "path_name": path_name,
-#         "message": "Reply from IEMAP API at " +
-#         #  naturaltime(date=datetime.now())
-#         datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
-#     }
+@app.api_route("/{path_name:path}", methods=["GET"])
+async def catch_all(request: Request, path_name: str):
+    return {
+        "request_method": request.method,
+        "path_name": path_name,
+        "message": "Reply from IEMAP API at " +
+        #  naturaltime(date=datetime.now())
+        datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
 
 
 if __name__ == "__main__":
