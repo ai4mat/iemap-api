@@ -1,12 +1,13 @@
 import hashlib
-import json
+
+# import json
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
-from server.utils.hashing_file import hash_file
+from core.utils import hash_file
 from os import getcwd, remove, rename, path
 from dotenv import dotenv_values
 
-import aiofiles
+# import aiofiles
 
 router = APIRouter()
 
@@ -21,8 +22,12 @@ upload_dir = config["FILESDIR"]  # dir is "uploaded" set in .env.shared
 
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 allowed_mime_types = [
-    "text/csv", "application/zip", "application/pdf", "text/plain",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    "text/csv",
+    # "application/zip",
+    "application/pdf",
+    "text/plain",
+    "chemical/x-cif",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]
 
 
@@ -71,8 +76,7 @@ def get_file(name_file: str):
         content = FileResponse(file_path)
         return content
     else:
-        return JSONResponse(content={"error": "file not found!"},
-                            status_code=404)
+        return JSONResponse(content={"error": "file not found!"}, status_code=404)
 
 
 @router.delete("/delete/file/{name_file}")
@@ -84,12 +88,11 @@ def delete_file(name_file: str):
         remove(file_path)
         return JSONResponse(content={"removed": True}, status_code=200)
     else:
-        return JSONResponse(content={
-            "removed": False,
-            "error_message": "File not found"
-        },
-                            status_code=404)
+        return JSONResponse(
+            content={"removed": False, "error_message": "File not found"},
+            status_code=404,
+        )
 
 
-#https://stackoverflow.com/questions/63580229/how-to-save-uploadfile-in-fastapi
-#https://dev.to/nelsoncode/how-to-create-server-of-files-with-fastapi-47d0
+# https://stackoverflow.com/questions/63580229/how-to-save-uploadfile-in-fastapi
+# https://dev.to/nelsoncode/how-to-create-server-of-files-with-fastapi-47d0
