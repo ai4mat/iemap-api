@@ -209,3 +209,8 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 [Dependency Management With Python Poetry](https://realpython.com/dependency-management-python-poetry/#add-poetry-to-an-existing-project)  
 [PyBites Python Poetry Training](https://www.youtube.com/watch?v=G-OAVLBFxbw)
 [Python projects with Poetry and VSCode. Part 2](https://www.pythoncheatsheet.org/blog/python-projects-with-poetry-and-vscode-part-2/)
+
+#### SENTRY
+
+[Integrate Sentry to FastAPI](https://philstories.medium.com/integrate-sentry-to-fastapi-7250603c070f)
+[Sentry ASGI Middleware for FASTAPI example](https://coveralls.io/builds/37501559/source?filename=app%2Fmain.py#L58)
