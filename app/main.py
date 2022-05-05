@@ -1,3 +1,5 @@
+import sentry_sdk
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from datetime import datetime
 from logging.config import dictConfig
 from fastapi import FastAPI, Request
@@ -5,6 +7,14 @@ from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
+# Initialize Sentry remote error tracking
+sentry_sdk.init(
+    "https://b7d66adc74fd443da385f61725111863@o1111757.ingest.sentry.io/6381392",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0,
+)
 # import routes from a specific version
 from api.api_v1.api import router as api_router
 
@@ -19,8 +29,25 @@ from core.log_config import logging_config
 # configure logging using a dictionary from core.log_config
 dictConfig(logging_config)
 
+
 # define FASTAPI application
 app = FastAPI(title=Config.app_name)
+# ADD SENTRY ASGI MIDDLEWARE, works fine with FastAPI
+app.add_middleware(SentryAsgiMiddleware)
+
+# Alternative approach using a custom middleware
+# @app.middleware("http")
+# async def sentry_exception(request: Request, call_next):
+#     try:
+#         response = await call_next(request)
+#         return response
+#     except Exception as e:
+#         with sentry_sdk.push_scope() as scope:
+#             scope.set_context("request", request)
+#             # user_id = "database_user_id"  # when available
+#             scope.user = ({"ip_address": request.client.host},)  # , "id": user_id}
+#             sentry_sdk.capture_exception(e)
+#         raise e
 
 
 app.add_middleware(
