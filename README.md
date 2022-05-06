@@ -202,7 +202,9 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 > [Free Online JSON to JSON Schema Converte](https://www.liquid-technologies.com/online-json-to-schema-converter)  
 > [JSON SCHEMA TOOL](https://www.jsonschema.net/home)  
 > [Tools to generate json schema](https://stackoverflow.com/questions/7341537/tool-to-generate-json-schema-from-json-data)  
->  [PyDantic datamodel code generator](https://pydantic-docs.helpmanual.io/datamodel_code_generator/)
+>  [PyDantic datamodel code generator](https://pydantic-docs.helpmanual.io/datamodel_code_generator/)  
+> [Pydantic](https://pydantic.org/)  
+> [Pydantic Video Tutorial](https://youtu.be/Vj-iU-8_xLs)
 
 #### POETRY
 
