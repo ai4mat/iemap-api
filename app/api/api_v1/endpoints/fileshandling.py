@@ -1,18 +1,18 @@
 import hashlib
+from core.utils import hash_file
+from os import getcwd, remove, rename, path
+from dotenv import dotenv_values
 
 # import json
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
-from core.utils import hash_file
-from os import getcwd, remove, rename, path
-from dotenv import dotenv_values
 
 # import aiofiles
 
 router = APIRouter()
 
 config = {
-    **dotenv_values(".env.shared"),  # load shared development variables
+    **dotenv_values(".env"),  # load shared development variables
 }
 upload_dir = config["FILESDIR"]  # dir is "uploaded" set in .env.shared
 
@@ -31,7 +31,7 @@ allowed_mime_types = [
 ]
 
 
-@router.post("/upload", response_description="Items retrieved")
+@router.post("/files/upload", response_description="Items retrieved", status_code=201)
 async def create_upload_file(file: UploadFile = File(...)):
     if file.content_type not in allowed_mime_types:
         raise HTTPException(400, detail="Invalid document type")
@@ -50,7 +50,7 @@ async def create_upload_file(file: UploadFile = File(...)):
     return {"info": f"file '{file.filename}' hash: {hash}"}
 
 
-@router.post("/uploadandhashing", response_description="Items retrieved")
+@router.post("/files/uploadandhashing", response_description="Items retrieved")
 async def create_upload_file(file: UploadFile = File(...)):
     if file.content_type not in allowed_mime_types:
         raise HTTPException(400, detail="Invalid document type")
@@ -67,7 +67,7 @@ async def create_upload_file(file: UploadFile = File(...)):
         return {"info": f"file '{file.filename}' hash: {hash}"}
 
 
-@router.get("/file/{name_file}")
+@router.get("/files/{name_file}")
 def get_file(name_file: str):
 
     file_path = f"{getcwd()}/{upload_dir}/{name_file}"
@@ -79,7 +79,7 @@ def get_file(name_file: str):
         return JSONResponse(content={"error": "file not found!"}, status_code=404)
 
 
-@router.delete("/delete/file/{name_file}")
+@router.delete("/files/delete/{name_file}")
 def delete_file(name_file: str):
 
     file_path = f"{getcwd()}/{upload_dir}/{name_file}"
