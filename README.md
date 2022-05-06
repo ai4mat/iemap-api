@@ -153,7 +153,9 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 [FASTAPI Project structure and versioning](https://christophergs.com/tutorials/ultimate-fastapi-tutorial-pt-8-project-structure-api-versioning/)  
 [FAST API versioning using fastapi-versioning](https://medium.com/geoblinktech/fastapi-with-api-versioning-for-data-applications-2b178b0f843f)  
 [How to save UploadFile in FastAPI(stackoverflow)](https://stackoverflow.com/questions/63580229/how-to-save-uploadfile-in-fastapi)
-[Real world MongoDb Example APP (TO USE AS BASE)](https://github.com/markqiu/fastapi-mongodb-realworld-example-app)
+[Real world MongoDb Example APP (TO USE AS BASE)](https://github.com/markqiu/fastapi-mongodb-realworld-example-app)  
+[JETBRAIN - Developing FastAPI Application using K8s & AWS](https://www.jetbrains.com/pycharm/guide/tutorials/fastapi-aws-kubernetes/introduction/)
+[Strategies for limiting upload file size](https://github.com/tiangolo/fastapi/issues/362)
 
 ## Logging
 
@@ -174,7 +176,8 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 [Building An Instagram Clone With GraphQL and Auth0](https://auth0.com/blog/building-an-instagram-clone-with-graphql-and-auth0/)  
 [GraphQL file uploads - evaluating the 5 most common approaches](https://wundergraph.com/blog/graphql_file_uploads_evaluating_the_5_most_common_approaches)  
 [Fetching data](https://hasura.io/learn/graphql/vue/intro-to-graphql/2-fetching-data-queries/)  
-[Hasura GrapQL tutorials](https://hasura.io/learn/)
+[Hasura GrapQL tutorials](https://hasura.io/learn/)  
+[Knowledge Graph App in 15min](https://levelup.gitconnected.com/knowledge-graph-app-in-15min-c76b94bb53b3)
 
 ### ML FASTAPI
 
