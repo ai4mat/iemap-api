@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Response, status
 from starlette.exceptions import HTTPException
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -12,7 +12,7 @@ from db.mongodb import AsyncIOMotorClient, get_database
 router = APIRouter()
 
 # http://0.0.0.0:8001/api/v1/health
-@router.get("/health", tags=["health"])
+@router.get("/health", tags=["health"], status_code=status.HTTP_200_OK)
 async def check_health(
     db: AsyncIOMotorClient = Depends(get_database),
 ):
