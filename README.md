@@ -185,7 +185,9 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 
 ### MongoDB
 
-[Getting Started with MongoDB and FastAPI](https://www.mongodb.com/developer/quickstart/python-quickstart-fastapi/)
+[Getting Started with MongoDB and FastAPI](https://www.mongodb.com/developer/quickstart/python-quickstart-fastapi/)  
+[FASTAPI + Motor](https://testdriven.io/blog/fastapi-mongo/)  
+[Check MongoDB is running](https://kb.objectrocket.com/mongo-db/check-if-a-mongodb-server-is-running-using-the-pymongo-python-driver-643)
 
 ### Deployment
 
@@ -207,7 +209,8 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 > [Tools to generate json schema](https://stackoverflow.com/questions/7341537/tool-to-generate-json-schema-from-json-data)  
 >  [PyDantic datamodel code generator](https://pydantic-docs.helpmanual.io/datamodel_code_generator/)  
 > [Pydantic](https://pydantic.org/)  
-> [Pydantic Video Tutorial](https://youtu.be/Vj-iU-8_xLs)
+> [Pydantic Video Tutorial](https://youtu.be/Vj-iU-8_xLs)  
+> [Validators vs Custom data types](https://towardsdev.com/pydantic-validators-v-s-custom-data-type-2c65c6402829)
 
 #### POETRY
 
