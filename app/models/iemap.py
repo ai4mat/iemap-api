@@ -6,7 +6,7 @@ from __future__ import annotations
 from datetime import datetime
 from bson.objectid import ObjectId
 
-from typing import List, Union, Optional
+from typing import Annotated, List, Union, Optional
 
 from pydantic import BaseModel, Field, validator
 from pydantic.class_validators import root_validator
@@ -209,7 +209,9 @@ def validate_datetime(cls, values):
 
 class newProject(BaseModel):
 
-    createdAt: Optional[datetime] = None
+    createdAt: Annotated[
+        datetime, Field(default_factory=lambda: datetime.now().utcnow())
+    ]
     updatedAt: Optional[datetime] = None
     user: User
     project: Project
@@ -220,9 +222,9 @@ class newProject(BaseModel):
     class Config:
         validate_assignment = True
 
-    @validator("createdAt", pre=True, always=True)
-    def set_createdAt(cls, createdAt):
-        return createdAt or datetime.now().utcnow()
+    # @validator("createdAt", pre=True, always=True)
+    # def set_createdAt(cls, createdAt):
+    #     return createdAt or datetime.now().utcnow()
 
     @validator("updatedAt", pre=True, always=True)
     def set_updatedAt(cls, updatedAt):
