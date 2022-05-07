@@ -1,13 +1,10 @@
-from typing import Optional
-
 from fastapi import APIRouter, Depends, Response, status
 from starlette.exceptions import HTTPException
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+
 
 from core.jwt import get_current_user_authorizer
 from crud.health import checkDB
 from db.mongodb import AsyncIOMotorClient, get_database
-
 
 router = APIRouter()
 
@@ -15,13 +12,17 @@ router = APIRouter()
 @router.get("/health", tags=["health"], status_code=status.HTTP_200_OK)
 async def check_health(
     db: AsyncIOMotorClient = Depends(get_database),
+    response: Response = Response(status_code=status.HTTP_200_OK),
 ):
-    status = await checkDB(db)
-    if type(status) is dict:
+
+    # dictionary Motor Client Info
+    result = await checkDB(db)
+    if type(result) is dict:
         return {
             "status": "Server's health is fine!",
         }
-    else:
-        return {
-            "status": "Something went wrong!",
-        }
+
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Something went wrong!!",
+    )
