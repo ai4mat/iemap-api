@@ -2,10 +2,13 @@ import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from datetime import datetime
 from logging.config import dictConfig
-from fastapi import FastAPI, Request
-from starlette.exceptions import HTTPException
+from fastapi import FastAPI, Request, Response, status
+from fastapi.responses import JSONResponse
+
+# from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+
+# from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 # Initialize Sentry remote error tracking
 sentry_sdk.init(
@@ -20,7 +23,8 @@ from api.api_v1.api import router as api_router
 
 # import configuration
 from core.config import Config
-from core.errors import http_422_error_handler, http_error_handler
+
+# from core.errors import http_422_error_handler, http_error_handler
 from db.mongodb_utils import close_mongo_connection, connect_to_mongo
 
 # loads logging configuration
@@ -34,6 +38,33 @@ dictConfig(logging_config)
 app = FastAPI(title=Config.app_name)
 # ADD SENTRY ASGI MIDDLEWARE, works fine with FastAPI
 app.add_middleware(SentryAsgiMiddleware)
+
+# GLOBAL ERROR HANDLING
+# async def catch_exceptions_middleware(request: Request, call_next):
+#     try:
+#         return await call_next(request)
+#     except Exception:
+#         # you probably want some kind of logging here
+#         return Response(
+#             content={"Watch out!!"},
+#             media_type="application/json",
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#         )
+# app.middleware("http")(catch_exceptions_middleware)
+
+
+@app.exception_handler(Exception)
+async def validation_exception_handler(request, err):
+    local = request.client.host == "127.0.0.1"
+    message = "Something went wrong!!"
+    if local:
+        message = f"Failed to execute: {request.method}: {request.url}"
+        return JSONResponse(
+            status_code=400, content={"message": message, "error": str(err)}
+        )
+    # Change here to LOGGER
+    return JSONResponse(status_code=400, content={"message": message})
+
 
 # Alternative approach using a custom middleware
 # @app.middleware("http")
@@ -61,8 +92,8 @@ app.add_middleware(
 app.add_event_handler("startup", connect_to_mongo)
 app.add_event_handler("shutdown", close_mongo_connection)
 
-app.add_exception_handler(HTTPException, http_error_handler)
-app.add_exception_handler(HTTP_422_UNPROCESSABLE_ENTITY, http_422_error_handler)
+# app.add_exception_handler(HTTPException, http_error_handler)
+# app.add_exception_handler(HTTP_422_UNPROCESSABLE_ENTITY, http_422_error_handler)
 
 
 # actualy add routes
