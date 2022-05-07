@@ -37,6 +37,7 @@ passlib = "^1.7.4"
 email-validator = "^1.2.0"
 colorlog = "^6.6.0"
 sentry-sdk = "^1.5.11"
+pymatgen = "^2022.4.26"
 
 
 
