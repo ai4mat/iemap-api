@@ -11,3 +11,16 @@ async def add_project(conn: AsyncIOMotorClient, project: IEMAPModel):
         project.dict()
     )
     return result.inserted_id
+
+
+async def list_projects(conn: AsyncIOMotorClient, project: IEMAPModel, limit, skip):
+
+    """Function returns `page_size` number of documents after last_id
+    and the new last_id.
+    """
+    coll = conn[database_name][ai4mat_collection_name]
+    list_projects = []
+    projects_docs = coll.find({}, {"_id": 0}, limit=limit, skip=skip)
+    async for row in projects_docs:
+        list_projects.append(row)
+    return list_projects
