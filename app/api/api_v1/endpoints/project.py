@@ -2,9 +2,11 @@ import datetime
 import json
 import logging
 import hashlib
+from typing import Optional
 import aiofiles
 
 from bson.objectid import ObjectId as BsonObjectId
+from core.parsing import parse_cif
 from core.utils import hash_file
 from os import getcwd, remove, rename, path
 from dotenv import dotenv_values
@@ -20,7 +22,7 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse
 from db.mongodb import AsyncIOMotorClient, get_database
-from crud.projects import add_project
+from crud.projects import add_project, list_projects
 from models.iemap import newProject as NewProjectModel, ObjectIdStr
 
 config = {
@@ -34,6 +36,7 @@ logger = logging.getLogger("ai4mat")
 allowed_mime_types = [
     "text/csv",
     # "application/zip",
+    "application/octet-stream",  # .cif
     "application/pdf",
     "text/plain",
     "chemical/x-cif",
@@ -41,6 +44,28 @@ allowed_mime_types = [
 ]
 
 router = APIRouter()
+
+
+# http://0.0.0.0:8001/api/v1/project/list/10/1
+@router.get(
+    "/project/list/",
+    tags=["projects"],
+    status_code=status.HTTP_200_OK,
+    # response_model=ProjectModel,
+)
+async def show_projects(
+    db: AsyncIOMotorClient = Depends(get_database),
+    project: NewProjectModel = None,
+    skip: Optional[int] = 0,
+    limit: Optional[int] = 10,
+):
+
+    # id is a ObjectId
+    result = await list_projects(db, project, limit, skip)
+    # content=json.dumps(dict(project), default=str)
+    # JSONResponse(content=json.dumps(dict(project), default=str))
+    return {"skip": skip, "limit": limit, "data": result}
+
 
 # http://0.0.0.0:8001/api/v1/project/add
 @router.post(
@@ -71,6 +96,8 @@ async def create_upload_file(project_id: ObjectIdStr, file: UploadFile = File(..
     # if len(file) > 1000000:
     #     raise HTTPException(400, detail="File too large")
     # file_type
+    file_ext = file.filename.split(".")[-1]
+
     file_to_write = f"{upload_dir}/{file.filename}"
 
     with open(file_to_write, "wb+") as file_object:
@@ -80,6 +107,9 @@ async def create_upload_file(project_id: ObjectIdStr, file: UploadFile = File(..
             while content := await file.read(1024 * 1024):  # async read chunk
                 await out_file.write(content)  # async write chunk
         # content = file.file.read()
+        structure, distinct_species, lattice = None, None, None
+        if file_ext == "cif":
+            structure, distinct_species, lattice = parse_cif(file_to_write)
         hash = hash_file(file_to_write)
         # h.update(content)
         # hash = h.hexdigest()
