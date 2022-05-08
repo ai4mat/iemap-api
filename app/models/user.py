@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import EmailStr, AnyUrl
+from pydantic import EmailStr, AnyUrl, Field
 
 
 from models.dbmodel import DBModelMixin
@@ -9,10 +9,9 @@ from core.security import generate_salt, get_password_hash, verify_password
 
 
 class UserBase(RWModel):
-    username: str
+    fullname: str = Field(...)
     email: EmailStr
-    bio: Optional[str] = ""
-    image: Optional[AnyUrl] = None
+    affiliation: Optional[str] = ""
 
 
 class UserInDB(DBModelMixin, UserBase):
@@ -45,8 +44,6 @@ class UserInCreate(UserInLogin):
 
 
 class UserInUpdate(RWModel):
-    username: Optional[str] = None
+
     email: Optional[EmailStr] = None
     password: Optional[str] = None
-    bio: Optional[str] = None
-    image: Optional[AnyUrl] = None
