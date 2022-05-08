@@ -7,7 +7,7 @@ from models.user import UserInCreate, UserInDB, UserInUpdate
 
 database_name, users_collection_name = (
     Config.mongo_db,
-    Config.mongo_coll,
+    Config.mongo_coll_users,
 )
 
 
