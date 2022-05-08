@@ -155,7 +155,13 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 [How to save UploadFile in FastAPI(stackoverflow)](https://stackoverflow.com/questions/63580229/how-to-save-uploadfile-in-fastapi)
 [Real world MongoDb Example APP (TO USE AS BASE)](https://github.com/markqiu/fastapi-mongodb-realworld-example-app)  
 [JETBRAIN - Developing FastAPI Application using K8s & AWS](https://www.jetbrains.com/pycharm/guide/tutorials/fastapi-aws-kubernetes/introduction/)
-[Strategies for limiting upload file size](https://github.com/tiangolo/fastapi/issues/362)
+[Strategies for limiting upload file size](https://github.com/tiangolo/fastapi/issues/362)  
+[Catch `Exception` in fast api globally](https://stackoverflow.com/questions/61596911/catch-exception-in-fast-api-globally)  
+[The Simplest Guide to FastAPI Dependency Injection using Depends](https://progressivecoder.com/fastapi-dependency-injection-using-depends/)
+
+### JWT Authentication
+
+[Securing FastAPI with JWT Token-based Authentication](https://testdriven.io/blog/fastapi-jwt-auth/)
 
 ## Logging
 
@@ -188,6 +194,10 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 [Getting Started with MongoDB and FastAPI](https://www.mongodb.com/developer/quickstart/python-quickstart-fastapi/)  
 [FASTAPI + Motor](https://testdriven.io/blog/fastapi-mongo/)  
 [Check MongoDB is running](https://kb.objectrocket.com/mongo-db/check-if-a-mongodb-server-is-running-using-the-pymongo-python-driver-643)
+[FASTAPI Contrib](https://fastapi-contrib.readthedocs.io/en/latest/)
+[MongoDB Pagination](https://medium.com/swlh/mongodb-pagination-fast-consistent-ece2a97070f3)
+[Paging with the Bucket Pattern - Part 1](https://www.mongodb.com/blog/post/paging-with-the-bucket-pattern--part-1)  
+[Paging with the Bucket Pattern - Part 2](https://www.mongodb.com/blog/post/paging-with-the-bucket-pattern--part-2)
 
 ### Deployment
 
