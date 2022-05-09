@@ -128,12 +128,16 @@ class UpdatedAt1(BaseModel):
     _date: str = Field(alias="$date")
 
 
-class File(BaseModel):
+class PropertyFile(BaseModel):
     hash: str
     extention: str
     size: str
-    createdAt: CreatedAt1
-    updatedAt: UpdatedAt1
+    createdAt: Annotated[
+        datetime, Field(default_factory=lambda: datetime.now().utcnow())
+    ]
+    updatedAt: Annotated[
+        datetime, Field(default_factory=lambda: datetime.now().utcnow())
+    ]
 
 
 class Property(BaseModel):
@@ -142,7 +146,7 @@ class Property(BaseModel):
     axis: Axis
     value: float
     units: Units
-    file: File
+    file: Optional[PropertyFile]
     isCalculated: bool
     isPhysical: bool
 
