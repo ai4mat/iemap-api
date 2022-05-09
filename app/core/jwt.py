@@ -14,7 +14,7 @@ from models.user import User
 
 from core.config import Config
 
-JWT_TOKEN_PREFIX, SECRET_KEY = (Config.jwt_token_prefix, Config.secret_key)
+JWT_TOKEN_PREFIX, SECRET_KEY = (Config.jwt_token_prefix, Config.jwt_secret_key)
 
 ALGORITHM = "HS256"
 access_token_jwt_subject = "access"
