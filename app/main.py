@@ -1,9 +1,11 @@
 import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from datetime import datetime
+from os import getcwd, path
 from logging.config import dictConfig
-from fastapi import FastAPI, Request, Response, status
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, Response, status, HTTPException
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 # from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
@@ -98,6 +100,17 @@ app.add_event_handler("shutdown", close_mongo_connection)
 
 # actualy add routes
 app.include_router(api_router, prefix=Config.api_v1_str)
+
+# TO SERVE FILES
+@app.api_route("/file/{name_file}", methods=["GET"])
+def get_file(name_file: str):
+    file_full_path = getcwd() + "/uploaded/" + name_file
+    if path.exists(file_full_path):
+        return FileResponse(path=getcwd() + "/uploaded/" + name_file)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found!!"
+        )
 
 
 # CATCH ALL ROUTE IT NEEDS TO BE LAST
