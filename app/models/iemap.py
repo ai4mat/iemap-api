@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 from datetime import datetime
+from enum import Enum
 from bson.objectid import ObjectId
 
 from typing import Annotated, List, Union, Optional
@@ -129,9 +130,9 @@ class UpdatedAt1(BaseModel):
 
 
 class PropertyFile(BaseModel):
-    hash: str
-    extention: str
-    size: str
+    hash: Optional[str]
+    extention: Optional[str]
+    size: Optional[str]
     createdAt: Annotated[
         datetime, Field(default_factory=lambda: datetime.now().utcnow())
     ]
@@ -180,28 +181,42 @@ class Publication(BaseModel):
     url: str
 
 
-class File1(BaseModel):
-    hash: str
+class fileType(Enum):
+    Code = "Code"
+    Tabular = "Tabular"
+    Image = "Image"
+    Raw_Inst_Data = "Raw Instrument Data"
+
+
+class FileProject(BaseModel):
+    hash: Optional[str]
     description: str
     name: str
-    extention: str
-    type: str
+    extention: Optional[str]
+    type: fileType
     isProcessed: bool
-    size: str
-    createdAt: CreatedAt2
-    updatedAt: UpdatedAt2
-    publication: Publication
-
-
-class timestamp(BaseModel):
-    date: Optional[datetime] = None
+    size: Optional[str]
+    createdAt: Annotated[
+        datetime, Field(default_factory=lambda: datetime.now().utcnow())
+    ]
+    updatedAt: Annotated[
+        datetime, Field(default_factory=lambda: datetime.now().utcnow())
+    ]
+    publication: Optional[Publication]
 
     class Config:
-        validate_assignment = True
+        use_enum_values = True
 
-    @validator("date", pre=True, always=True)
-    def set_name(cls, date):
-        return date or datetime.now().utcnow()
+
+# class timestamp(BaseModel):
+#     date: Optional[datetime] = None
+
+#     class Config:
+#         validate_assignment = True
+
+#     @validator("date", pre=True, always=True)
+#     def set_name(cls, date):
+#         return date or datetime.now().utcnow()
 
 
 def validate_datetime(cls, values):
@@ -216,13 +231,16 @@ class newProject(BaseModel):
     createdAt: Annotated[
         datetime, Field(default_factory=lambda: datetime.now().utcnow())
     ]
-    updatedAt: Optional[datetime] = None
+    updatedAt: Annotated[
+        datetime, Field(default_factory=lambda: datetime.now().utcnow())
+    ]
     user: User
     project: Project
+    projectWP: str
     process: Process
-    # files: List[File1]
-    _v: str
-    # projectWP: str
+    files: Optional[List[FileProject]] = None
+    _v: Optional[str] = Field(default="1_0")
+
     class Config:
         validate_assignment = True
 
@@ -230,9 +248,9 @@ class newProject(BaseModel):
     # def set_createdAt(cls, createdAt):
     #     return createdAt or datetime.now().utcnow()
 
-    @validator("updatedAt", pre=True, always=True)
-    def set_updatedAt(cls, updatedAt):
-        return updatedAt or datetime.now().utcnow()
+    # @validator("updatedAt", pre=True, always=True)
+    # def set_updatedAt(cls, updatedAt):
+    #     return updatedAt or datetime.now().utcnow()
 
 
 # https://stackoverflow.com/questions/63616798/pydantic-how-to-pass-the-default-value-to-a-variable-if-none-was-passed
