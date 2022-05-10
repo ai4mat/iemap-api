@@ -5,7 +5,7 @@ from bson.objectid import ObjectId as BsonObjectId
 from core.parsing import parse_cif
 from core.utils import get_str_file_size, hash_file
 from os import rename, getcwd, path
-from dotenv import dotenv_values
+from dotenv import dotenv_values, find_dotenv
 
 from fastapi import APIRouter, Depends, status, File, UploadFile, HTTPException, Request
 from fastapi.responses import JSONResponse, FileResponse
@@ -19,10 +19,9 @@ from crud.projects import (
 )
 from models.iemap import newProject as NewProjectModel, ObjectIdStr
 
-config = {
-    **dotenv_values(".env"),  # load shared development variables
-}
-upload_dir = config["FILESDIR"]
+from core.config import Config
+
+upload_dir = Config.files_dir
 
 logger = logging.getLogger("ai4mat")
 
