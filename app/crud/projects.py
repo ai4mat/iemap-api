@@ -81,6 +81,39 @@ async def add_property_file(
     return result_update.modified_count
 
 
+async def add_project_file(
+    conn: AsyncIOMotorClient,
+    id: str,
+    fileHash: str,
+    fileSize: str,
+    fileExt: str,
+    fileName: str,
+):
+    """Function to add file hash to PROJECT
+    The document to update is identified by the document's id, and file's name and extention.
+    """
+    #  {"_id":ObjectId("62752dd88856514dab27dd8e")},
+    # {$set:{"process.properties.$[elem].hash":"hash-2"}},{arrayFilters:[{$and:[{"elem.name":"H2o"},{"elem.type":"2D"}]}]}
+
+    coll = conn[database_name][ai4mat_collection_name]
+
+    result_update = await coll.update_one(
+        {"_id": ObjectId(id)},
+        {
+            "$set": {
+                "files.$[elem].hash": fileHash,
+                "files.$[elem].size": fileSize,
+                "files.$[elem].extention": fileExt,
+            }
+        },
+        upsert=False,
+        array_filters=[
+            {"$and": [{"elem.name": fileName}, {"elem.extention": fileExt}]}
+        ],
+    )
+    return result_update.modified_count
+
+
 # https://medium.com/@madhuri.pednekar/handling-mongodb-objectid-in-python-fastapi-4dd1c7ad67cd
 # https://www.tutorialsteacher.com/mongodb/update-arrays
 # https://www.mongodb.com/docs/manual/reference/operator/update/positional-filtered/#mongodb-update-up.---identifier--
