@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from db.mongodb import AsyncIOMotorClient, get_database
 from crud.projects import (
     add_project,
+    add_project_file,
     list_project_properties_files,
     list_projects,
     add_property_file,
@@ -79,9 +80,15 @@ async def add_new_project(
     return {"inserted_id": str(id)}
 
 
-# http://0.0.0.0:8001/api/v1/project/addfile/{project_id}
-@router.post("/project/add/file/{project_id}", tags=["projects"])
-async def create_project_file(project_id: ObjectIdStr, file: UploadFile = File(...)):
+# ADD PROJECT FILES
+# http://0.0.0.0:8001/api/v1/project/addfile/?project_id=5eb8f8f8f8f8f8f8f8f8f8f8&file=TEST.pdf
+@router.post("/project/add/file/", tags=["projects"])
+async def create_project_file(
+    file_name: str,
+    project_id: ObjectIdStr,
+    file: UploadFile = File(...),
+    db: AsyncIOMotorClient = Depends(get_database),
+):
     id_mongodb = BsonObjectId(project_id)
     # Check file MimeType
     if file.content_type not in allowed_mime_types:
@@ -102,17 +109,17 @@ async def create_project_file(project_id: ObjectIdStr, file: UploadFile = File(.
         if file_ext == "cif":
             structure, distinct_species, lattice = parse_cif(file_to_write)
         hash = hash_file(file_to_write)
-        # h.update(content)
-        # hash = h.hexdigest()
-        # file_object.write(file.file.read())
-        ext = file.filename.split(".")[-1]
-        rename(file_to_write, f"{upload_dir}/{hash}.{ext}")
-
-        return {
-            "file_name": f"{file.filename}",
-            "file_hash": f"{hash}",
-            "file_size": get_str_file_size(file_to_write),
-        }
+        new_file_name = f"{upload_dir}/{hash}.{file_ext}"
+        rename(file_to_write, new_file_name)
+        file_size = get_str_file_size(new_file_name)
+    update_modified_count = await add_project_file(
+        db, id_mongodb, hash, file_size, file_ext, file_name.split(".")[0]
+    )
+    return {
+        "file_name": f"{file.filename}",
+        "file_hash": f"{hash}",
+        "file_size": file_size,
+    }
 
 
 # http://0.0.0.0:8001/api/v1/project/add/file/?project_id=62752dd88856514dab27dd8e&property_name=H2o&property_type=2D
