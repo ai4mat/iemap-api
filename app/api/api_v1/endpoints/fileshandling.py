@@ -1,7 +1,7 @@
 import hashlib
 from core.utils import hash_file
 from os import getcwd, remove, rename, path
-from dotenv import dotenv_values
+from dotenv import dotenv_values, find_dotenv
 
 # import json
 from fastapi import APIRouter, UploadFile, File, HTTPException
@@ -10,11 +10,14 @@ from fastapi.responses import JSONResponse, FileResponse
 # import aiofiles
 
 router = APIRouter()
+from core.config import Config
 
-config = {
-    **dotenv_values(".env"),  # load shared development variables
-}
-upload_dir = config["FILESDIR"]  # dir is "uploaded" set in .env.shared
+# config = {
+#     **dotenv_values(
+#         find_dotenv(raise_error_if_not_found=True)
+#     ),  # load shared development variables
+# }
+upload_dir = Config.files_dir  # dir is "uploaded" set in .env.shared
 
 # allowed_format = json.loads(
 #     config["ALLOWED_FORMAT_UPLOAD"]
