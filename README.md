@@ -157,7 +157,8 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 [JETBRAIN - Developing FastAPI Application using K8s & AWS](https://www.jetbrains.com/pycharm/guide/tutorials/fastapi-aws-kubernetes/introduction/)
 [Strategies for limiting upload file size](https://github.com/tiangolo/fastapi/issues/362)  
 [Catch `Exception` in fast api globally](https://stackoverflow.com/questions/61596911/catch-exception-in-fast-api-globally)  
-[The Simplest Guide to FastAPI Dependency Injection using Depends](https://progressivecoder.com/fastapi-dependency-injection-using-depends/)
+[The Simplest Guide to FastAPI Dependency Injection using Depends](https://progressivecoder.com/fastapi-dependency-injection-using-depends/)  
+[FASTAPI error running UVICORN](https://stackoverflow.com/questions/60819376/fastapi-throws-an-error-error-loading-asgi-app-could-not-import-module-api)
 
 ### JWT Authentication
 
