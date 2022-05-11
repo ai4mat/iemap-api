@@ -154,7 +154,10 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 [FAST API versioning using fastapi-versioning](https://medium.com/geoblinktech/fastapi-with-api-versioning-for-data-applications-2b178b0f843f)  
 [How to save UploadFile in FastAPI(stackoverflow)](https://stackoverflow.com/questions/63580229/how-to-save-uploadfile-in-fastapi)
 [Real world MongoDb Example APP (TO USE AS BASE)](https://github.com/markqiu/fastapi-mongodb-realworld-example-app)  
-[JETBRAIN - Developing FastAPI Application using K8s & AWS](https://www.jetbrains.com/pycharm/guide/tutorials/fastapi-aws-kubernetes/introduction/)
+[JETBRAIN - Developing FastAPI Application using K8s & AWS](https://www.jetbrains.com/pycharm/guide/tutorials/fastapi-aws-kubernetes/introduction/)  
+[Python API Development - Comprehensive Course for Beginners (19 hours)](https://www.youtube.com/watch?v=0sOvCWFmrtA)  
+[FASTAPI Playlist ITALIANO](https://www.youtube.com/watch?v=17pKUjh5oj0&list=PLyaoAB2kb_ZFSo7IMOkWdZKJqvsj4dwV5)  
+[Modern Python through FastAPI and friends. Sebastián Ramírez.](https://www.youtube.com/watch?v=37CcB2GBdlY)  
 [Strategies for limiting upload file size](https://github.com/tiangolo/fastapi/issues/362)  
 [Catch `Exception` in fast api globally](https://stackoverflow.com/questions/61596911/catch-exception-in-fast-api-globally)  
 [The Simplest Guide to FastAPI Dependency Injection using Depends](https://progressivecoder.com/fastapi-dependency-injection-using-depends/)  
@@ -211,9 +214,11 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 
 #### Pydantic
 
-> to generate a Pydantic model from a JSON schema use
+> to generate a Pydantic model from a JSON schema use:
+
 > `datamodel-codegen --input schema_db.json --input-file-type jsonschema --output model_iemap.py`
-> a schema can be generated online from a JSON file using:
+
+> a schema can be generated online from a JSON file using:  
 > [Free Online JSON to JSON Schema Converte](https://www.liquid-technologies.com/online-json-to-schema-converter)  
 > [JSON SCHEMA TOOL](https://www.jsonschema.net/home)  
 > [Tools to generate json schema](https://stackoverflow.com/questions/7341537/tool-to-generate-json-schema-from-json-data)  
