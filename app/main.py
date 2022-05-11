@@ -102,6 +102,7 @@ app.add_event_handler("shutdown", close_mongo_connection)
 app.include_router(api_router, prefix=Config.api_v1_str)
 
 # TO SERVE FILES
+# http://0.0.0.0:8001/file/hashfile
 @app.api_route("/file/{name_file}", methods=["GET"])
 def get_file(name_file: str):
     file_full_path = getcwd() + "/uploaded/" + name_file
