@@ -39,7 +39,7 @@ allowed_mime_types = [
 router = APIRouter()
 
 
-# http://0.0.0.0:8001/api/v1/project/list/10/1
+# http://0.0.0.0:8001/api/v1/project/list/?skip=0&limit=3
 @router.get(
     "/project/list/",
     tags=["projects"],
@@ -182,6 +182,7 @@ def get_file(name_file: str):
 
 
 # http://0.0.0.0:8001/api/v1/project/file/list
+# LIST PROPERTIES FILES BY AFFILIATION & PROJECT NAME
 @router.get(
     "/project/file/list/",
     tags=["projects"],
