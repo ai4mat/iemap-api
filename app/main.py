@@ -37,7 +37,18 @@ dictConfig(logging_config)
 
 
 # define FASTAPI application
-app = FastAPI(title=Config.app_name)
+app = FastAPI(
+    title="Mission Innovation IEMAP API",
+    description="RESTful/GraphQL API for Mission Innovation - IEMAP stored data",
+    version="0.1.0",
+    terms_of_service="",
+    contact={
+        "name": "IEMAP API info",
+        "url": "https://github.com/<iemap?>/mi-api/",
+        "email": "iemap-api@enea.it",
+    },
+    license_info={"name": "MIT", "url": "https://mit-license.org/"},
+)
 # ADD SENTRY ASGI MIDDLEWARE, works fine with FastAPI
 app.add_middleware(SentryAsgiMiddleware)
 
@@ -68,34 +79,16 @@ async def validation_exception_handler(request, err):
     return JSONResponse(status_code=400, content={"message": message})
 
 
-# Alternative approach using a custom middleware
-# @app.middleware("http")
-# async def sentry_exception(request: Request, call_next):
-#     try:
-#         response = await call_next(request)
-#         return response
-#     except Exception as e:
-#         with sentry_sdk.push_scope() as scope:
-#             scope.set_context("request", request)
-#             # user_id = "database_user_id"  # when available
-#             scope.user = ({"ip_address": request.client.host},)  # , "id": user_id}
-#             sentry_sdk.capture_exception(e)
-#         raise e
-
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=Config.allowed_hosts,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=Config.allowed_hosts,
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 app.add_event_handler("startup", connect_to_mongo)
 app.add_event_handler("shutdown", close_mongo_connection)
-
-# app.add_exception_handler(HTTPException, http_error_handler)
-# app.add_exception_handler(HTTP_422_UNPROCESSABLE_ENTITY, http_422_error_handler)
 
 
 # actualy add routes
