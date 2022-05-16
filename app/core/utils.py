@@ -1,12 +1,16 @@
 import enum
 import hashlib
 import json
-import os
+from os import rename, path
+import aiofiles
 from math import modf, trunc
 from bson.objectid import ObjectId
 from fastapi.encoders import jsonable_encoder
+from fastapi import HTTPException, UploadFile
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
+from core.parsing import parse_cif
+from core.config import Config
 
 
 def create_aliased_response(model: BaseModel) -> JSONResponse:
@@ -61,7 +65,7 @@ def convert_unit(size_in_bytes, unit):
 
 def get_str_file_size(file_name, size_type=None):
     """Get file in size in given unit like KB, MB or GB"""
-    size = os.path.getsize(file_name)
+    size = path.getsize(file_name)
     if size_type:
         size_converted = convert_unit(size, size_type)
         return str(truncate(size_converted, 3)) + " " + size_type.name
@@ -72,6 +76,31 @@ def get_str_file_size(file_name, size_type=None):
 
         if len(str(int(int_part))) < 3:
             return str(size_truncated) + " " + size_type.name
+
+
+async def save_file(file: UploadFile, upload_dir: str):
+
+    if file.content_type not in Config.allowed_mime_types:
+        raise HTTPException(400, detail="Invalid document type")
+    # retrieve file extension
+    file_ext = file.filename.split(".")[-1]
+    # file to write path
+    file_to_write = f"{upload_dir}/{file.filename}"
+    # write file to disk in chunks
+    file_hash, str_file_size = None, None
+    try:
+        with open(file_to_write, "wb+") as file_object:
+            # SLOWER VERSION BUT DOES NOT LOAD ENTIRE FILE IN MEMORY
+            async with aiofiles.open(file_to_write, "wb") as out_file:
+                while content := await file.read(1024 * 1024):  # async read chunk
+                    await out_file.write(content)  # async write chunk
+            file_hash = hash_file(file_to_write)
+            new_file_name = f"{upload_dir}/{file_hash}.{file_ext}"
+            rename(file_to_write, new_file_name)
+        str_file_size = get_str_file_size(new_file_name)
+    except Exception as e:
+        raise HTTPException(400, detail=str(e))
+    return file_hash, str_file_size, file_ext
 
 
 class JSONEncoder(json.JSONEncoder):
