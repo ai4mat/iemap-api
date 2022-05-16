@@ -1,3 +1,4 @@
+uploaded/
 # VS Code Local-History directory and files
 /.lh
 # VS Code settings
@@ -116,8 +117,9 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env.*
+
 .env
+.env.sample
 .venv
 env/
 venv/
@@ -155,3 +157,5 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+uploaded

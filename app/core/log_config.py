@@ -1,34 +1,35 @@
 LOG_LEVEL: str = "DEBUG"
-FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+FORMAT: str = "%(levelname)s: %(asctime)s - %(name)s -  - %(message)s"
+
+
 logging_config = {
     "version": 1,  # mandatory field
     # if you want to overwrite existing loggers' configs
-    # "disable_existing_loggers": False,
+    "disable_existing_loggers": False,
     "formatters": {
         "basic": {
             "()": "uvicorn.logging.DefaultFormatter",
             "format": FORMAT,
             "datefmt": "%Y-%m-%d %H:%M:%S",
-        }
+        },
+        "colored": {
+            "()": "colorlog.ColoredFormatter",
+            "format": "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+        },
     },
     "handlers": {
         "console": {
-            "formatter": "basic",
+            "formatter": "colored",  # "basic",
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stderr",
             "level": LOG_LEVEL,
         }
     },
     "loggers": {
-        "simple_example": {
+        "ai4mat": {
             "handlers": ["console"],
             "level": LOG_LEVEL,
             # "propagate": False
         }
     },
 }
-
-import logging
-
-# create logger
-logger = logging.getLogger('simple_example')
