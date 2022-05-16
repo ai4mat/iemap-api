@@ -3,14 +3,16 @@
 #   timestamp: 2022-04-19T08:23:29+00:00
 
 from __future__ import annotations
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from bson.objectid import ObjectId
 
-from typing import Annotated, List, Union, Optional
-
+from typing import Annotated, List, Union, Optional, Type
+import inspect
+import json
 from pydantic import BaseModel, Field, validator
 from pydantic.class_validators import root_validator
+from fastapi import Form
 
 
 class ObjectIdStr(str):
@@ -130,6 +132,7 @@ class UpdatedAt1(BaseModel):
 
 
 class PropertyFile(BaseModel):
+    name: str = Field(default="")
     hash: Optional[str]
     extention: Optional[str]
     size: Optional[str]
@@ -144,9 +147,9 @@ class PropertyFile(BaseModel):
 class Property(BaseModel):
     name: str
     type: str
-    axis: Axis
+    # axis: Axis
     value: float
-    units: Units
+    # units: Units
     file: Optional[PropertyFile]
     isCalculated: bool
     isPhysical: bool
@@ -171,14 +174,18 @@ class UpdatedAt2(BaseModel):
     _date: str = Field(..., alias="$date")
 
 
-class Date(BaseModel):
-    _date: str = Field(..., alias="$date")
-
-
 class Publication(BaseModel):
     name: str
-    date: Date
-    url: str
+    date: datetime
+    url: Optional[str]
+
+    class Config:
+        validate_assignment = True
+
+    @validator("date", pre=True, always=True)
+    def _set_publication_date_type(cls, date: datetime):
+        result = datetime.strptime(date, "%Y-%M-%d") or date
+        return result
 
 
 class fileType(Enum):
@@ -187,12 +194,25 @@ class fileType(Enum):
     Image = "Image"
     Raw_Inst_Data = "Raw Instrument Data"
 
+    @staticmethod
+    def from_str(label):
+        if label in "code":
+            return fileType.Code
+        if label in "tabular":
+            return fileType.Tabular
+        if label in "image":
+            return fileType.Image
+        if label in "raw inst data":
+            return fileType.Raw_Inst_Data
+        else:
+            raise NotImplementedError
+
 
 class FileProject(BaseModel):
-    hash: Optional[str]
+    hash: str
     description: str
     name: str
-    extention: Optional[str]
+    extention: str
     type: fileType
     isProcessed: bool
     size: Optional[str]
@@ -206,17 +226,6 @@ class FileProject(BaseModel):
 
     class Config:
         use_enum_values = True
-
-
-# class timestamp(BaseModel):
-#     date: Optional[datetime] = None
-
-#     class Config:
-#         validate_assignment = True
-
-#     @validator("date", pre=True, always=True)
-#     def set_name(cls, date):
-#         return date or datetime.now().utcnow()
 
 
 def validate_datetime(cls, values):
@@ -244,13 +253,98 @@ class newProject(BaseModel):
     class Config:
         validate_assignment = True
 
-    # @validator("createdAt", pre=True, always=True)
-    # def set_createdAt(cls, createdAt):
-    #     return createdAt or datetime.now().utcnow()
 
-    # @validator("updatedAt", pre=True, always=True)
-    # def set_updatedAt(cls, updatedAt):
-    #     return updatedAt or datetime.now().utcnow()
+# def as_form(cls: Type[BaseModel]):
+#     new_parameters = []
+
+#     for field_name, model_field in cls.__fields__.items():
+#         model_field: ModelField  # type: ignore
+
+#         new_parameters.append(
+#             inspect.Parameter(
+#                 model_field.alias,
+#                 inspect.Parameter.POSITIONAL_ONLY,
+#                 default=Form(...)
+#                 if not model_field.required
+#                 else Form(model_field.default),
+#                 annotation=model_field.outer_type_,
+#             )
+#         )
+
+#     async def as_form_func(**data):
+#         return cls(**data)
+
+#     sig = inspect.signature(as_form_func)
+#     sig = sig.replace(parameters=new_parameters)
+#     as_form_func.__signature__ = sig  # type: ignore
+#     setattr(cls, "as_form", as_form_func)
+#     return cls
+
+
+def as_form(cls: Type[BaseModel]):
+    new_parameters = []
+
+    for field_name, model_field in cls.__fields__.items():
+        model_field: ModelField  # type: ignore
+
+        if not model_field.required:
+            new_parameters.append(
+                inspect.Parameter(
+                    model_field.alias,
+                    inspect.Parameter.POSITIONAL_ONLY,
+                    default=Form(model_field.default),
+                    annotation=model_field.outer_type_,
+                )
+            )
+        else:
+            new_parameters.append(
+                inspect.Parameter(
+                    model_field.alias,
+                    inspect.Parameter.POSITIONAL_ONLY,
+                    default=Form(...),
+                    annotation=model_field.outer_type_,
+                )
+            )
+
+    async def as_form_func(**data):
+        return cls(**data)
+
+    sig = inspect.signature(as_form_func)
+    sig = sig.replace(parameters=new_parameters)
+    as_form_func.__signature__ = sig  # type: ignore
+    setattr(cls, "as_form", as_form_func)
+    return cls
+
+
+@as_form
+class PropertyForm(BaseModel):
+    name: str
+    type: str
+    axis_labelX: str
+    axis_labelY: str
+    value: float
+    units_x: str
+    units_y: str
+    isCalculated: bool
+    isPhysical: bool
+
+
+@as_form
+class ProjectFileForm(BaseModel):
+    name: str
+    description: str
+    type: str
+    isProcessed: str
+    publication_name: Optional[str] = ""
+    publication_date: Optional[str] = None
+    publication_url: Optional[str] = ""
+
+    # class Config:
+    #     validate_assignment = True
+
+    # @validator("publication_date", pre=True, always=True)
+    # def _set_publication_date_type(cls, publication_date: datetime):
+    #     return publication_date.to or datetime(publication_date)
 
 
 # https://stackoverflow.com/questions/63616798/pydantic-how-to-pass-the-default-value-to-a-variable-if-none-was-passed
