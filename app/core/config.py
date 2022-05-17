@@ -12,6 +12,17 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # one week
 
 # load_dotenv(find_dotenv(raise_error_if_not_found=True))
 
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+allowed_mime_types = [
+    "text/csv",
+    # "application/zip",
+    "application/octet-stream",  # .cif
+    "application/pdf",
+    "text/plain",
+    "chemical/x-cif",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]
+
 path_dot_env = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../.env")
 
 config = {
@@ -39,18 +50,4 @@ class Config(object):
     allowed_hosts = CommaSeparatedStrings(config.get("ALLOWED_HOSTS", "*"))
     api_v1_str = config["API_V1_STR"]
     files_dir = config["FILESDIR"]
-
-
-# MONGODB_URL = os.getenv("MONGODB_URL", "")  # deploying without docker-compose
-# if not MONGODB_URL:
-#     MONGO_HOST = os.getenv("MONGO_HOST", "localhost")
-#     MONGO_PORT = int(os.getenv("MONGO_PORT", 27017))
-#     MONGO_USER = os.getenv("MONGO_USER", "admin")
-#     MONGO_PASS = os.getenv("MONGO_PASSWORD", "markqiu")
-#     MONGO_DB = os.getenv("MONGO_DB", "fastapi")
-
-#     MONGODB_URL = DatabaseURL(
-#         f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}"
-#     )
-# else:
-#     MONGODB_URL = DatabaseURL(MONGODB_URL)
+    allowed_mime_types = allowed_mime_types

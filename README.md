@@ -202,6 +202,8 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 [MongoDB Pagination](https://medium.com/swlh/mongodb-pagination-fast-consistent-ece2a97070f3)
 [Paging with the Bucket Pattern - Part 1](https://www.mongodb.com/blog/post/paging-with-the-bucket-pattern--part-1)  
 [Paging with the Bucket Pattern - Part 2](https://www.mongodb.com/blog/post/paging-with-the-bucket-pattern--part-2)
+[7 ways to counts documents in MongoDB](https://database.guide/7-ways-to-count-documents-in-mongodb/)  
+[MongoDB Pagination, Fast & Consistent](https://medium.com/swlh/mongodb-pagination-fast-consistent-ece2a97070f3)
 
 ### Deployment
 
