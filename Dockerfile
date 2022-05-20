@@ -1,13 +1,13 @@
 FROM python:3.9.5-slim
 
 COPY requirements.txt /
+RUN apt-get update && apt-get -y install gcc
 RUN python3 -m pip install --upgrade pip
-RUN pip3 install -r /requirements.txt
+RUN pip3 install --no-cache-dir -r /requirements.txt
 
-WORKDIR /app
 COPY /app /app
+WORKDIR /app
 
-EXPOSE 8000
+EXPOSE 80
 
-CMD ["python", "main.py"]
-
+CMD python -m uvicorn main:app --host 0.0.0.0 --port 80
