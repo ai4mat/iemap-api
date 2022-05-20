@@ -11,7 +11,7 @@ build:
 
 run: 
 	@echo 'Run container with fs support...'
-	@docker run --detach -p 8000:8000 --env-file=$(ENV_FILE) $(APP_NAME)
+	@docker run --restart always --detach -p 8000:8000 --env-file=$(ENV_FILE) $(APP_NAME)
 
 start:
 	@echo 'Starting container...'
