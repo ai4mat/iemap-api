@@ -1,4 +1,5 @@
 import json
+from models.iemap import FileProject, ProjectFileForm, Property
 from pickle import FALSE
 from db.mongodb import AsyncIOMotorClient
 from bson.objectid import ObjectId
@@ -24,10 +25,11 @@ async def list_projects(conn: AsyncIOMotorClient, project: IEMAPModel, limit, sk
     and the new last_id.
     """
     coll = conn[database_name][ai4mat_collection_name]
-    list_projects = []
-    projects_docs = await coll.find({}, {"_id": 0}, limit=limit, skip=skip)
-    async for row in projects_docs:
-        list_projects.append(row)
+    list_projects = await coll.find({}, {"_id": 0}, limit=limit, skip=skip).to_list(
+        None
+    )
+    # async for row in projects_docs:
+    #     list_projects.append(row)
     return list_projects
 
 
@@ -112,6 +114,153 @@ async def add_project_file(
         ],
     )
     return result_update.modified_count
+
+
+async def find_project_file_by_hash(conn: AsyncIOMotorClient, file_hash: str, id: str):
+    """Function to check if file hash already exists in the database."""
+    coll = conn[database_name][ai4mat_collection_name]
+    # db.data.find({_id:ObjectId("62761c48856da47202945e05")},{"files":{$filter:{input:"$files",cond:{$eq:["$$this.name","File esperimento 1"]}}}})
+    result = await coll.find_one(
+        {"_id": ObjectId(id)},
+        {
+            "files": {
+                "$filter": {
+                    input: "$files",
+                    "cond": {"$eq": ["$$this.hash", file_hash]},
+                }
+            }
+        },
+    )
+    return result
+
+
+async def count_projects(conn: AsyncIOMotorClient) -> int:
+    coll = conn[database_name][ai4mat_collection_name]
+    result = await coll.count_documents({})
+    return result
+
+
+async def add_project_file_and_data(
+    conn: AsyncIOMotorClient, id: str, file_data: FileProject
+):
+    """Function to add file hash to PROJECT
+    The document to update is identified by the document's id, and file's name and extention.
+    """
+    #  {"_id":ObjectId("62752dd88856514dab27dd8e")},
+    # {$set:{"process.properties.$[elem].hash":"hash-2"}},{arrayFilters:[{$and:[{"elem.name":"H2o"},{"elem.type":"2D"}]}]}
+
+    coll = conn[database_name][ai4mat_collection_name]
+    try:
+        result_update = await coll.update_one(
+            {"_id": ObjectId(id)},
+            {
+                "$addToSet": {
+                    "files": file_data.dict(),
+                }
+            },
+        )
+    # result_update = await coll.update_one(
+    #     {"_id": ObjectId(id)},
+    #     {
+    #         "$set": {
+    #             "files.$[elem]": file_data.dict(),
+    #         }
+    #     },
+    #     upsert=True,
+    #     array_filters=[{"$and": [{"elem.hash": file_data.hash}]}],
+    # )
+    except Exception as WriteError:
+        result_update = await coll.update_one(
+            {"_id": ObjectId(id)},
+            {
+                "$addToSet": {
+                    "files": file_data.dict(),
+                }
+            },
+        )
+
+    return result_update.modified_count, result_update.matched_count
+
+
+async def add_property(conn: AsyncIOMotorClient, id: str, property: Property):
+    """Function to add file hash to a property file.
+    The document to update is identified by the document's id, and the property file's name.
+    """
+    #  {"_id":ObjectId("62752dd88856514dab27dd8e")},
+    # {$set:{"process.properties.$[elem].hash":"hash-2"}},{arrayFilters:[{$and:[{"elem.name":"H2o"},{"elem.type":"2D"}]}]}
+
+    coll = conn[database_name][ai4mat_collection_name]
+    update_query = {
+        "$addToSet": {"process.properties": {**property.dict()}}
+        # "$set": {
+        #     "process.properties.$[elem].name": property.name
+        #     #  {
+        #     #     **property.dict(),
+        #     # }
+        # }
+    }
+    print(update_query)
+    result_update = await coll.update_one(
+        {"_id": ObjectId(id)},
+        update_query,
+        # upsert=True,
+        # array_filters=[
+        #     {"$and": [{"elem.name": property.name}, {"elem.type": property.type}]}
+        # ],
+    )
+
+    return result_update.modified_count, result_update.upserted_id
+
+
+def generate_pagination_query(query, sort=None, next_key=None):
+    sort_field = None if sort is None else sort[0]
+
+    def next_key_fn(items):
+        if len(items) == 0:
+            return None
+        item = items[-1]
+        if sort_field is None:
+            return {"_id": item["_id"]}
+        else:
+            return {"_id": item["_id"], sort_field: item[sort_field]}
+
+    if next_key is None:
+        return query, next_key_fn
+
+    paginated_query = query.copy()
+
+    if sort is None:
+        paginated_query["_id"] = {"$gt": next_key["_id"]}
+        return paginated_query, next_key_fn
+
+    sort_operator = "$gt" if sort[1] == 1 else "$lt"
+
+    pagination_query = [
+        {sort_field: {sort_operator: next_key[sort_field]}},
+        {
+            "$and": [
+                {sort_field: next_key[sort_field]},
+                {"_id": {sort_operator: next_key["_id"]}},
+            ]
+        },
+    ]
+
+    if "$or" not in paginated_query:
+        paginated_query["$or"] = pagination_query
+    else:
+        paginated_query = {"$and": [query, {"$or": pagination_query}]}
+
+    return paginated_query, next_key_fn
+
+
+async def find_all_project_paginated(
+    conn: AsyncIOMotorClient, query={}, limit=10, sort=["_id", -1], next_key=None
+):
+    coll = conn[database_name][ai4mat_collection_name]
+    paginated_query, next_key_fn = generate_pagination_query(query, sort, next_key)
+    result = await coll.find(paginated_query).limit(limit).sort([sort]).to_list(None)
+    next_key = next_key_fn(result)
+    return result, next_key
 
 
 # https://medium.com/@madhuri.pednekar/handling-mongodb-objectid-in-python-fastapi-4dd1c7ad67cd
