@@ -1,5 +1,6 @@
 APP_NAME = mi-api
 ENV_FILE = .env
+HOST_PORT=8000
 
 .PHONY: all
 
@@ -11,7 +12,7 @@ build:
 
 run: 
 	@echo 'Run container with fs support...'
-	@docker run --restart always --detach -p 8000:80/tcp -v $(FILESDIR):/$(FILESDIR) --env-file $(ENV_FILE) $(APP_NAME)
+	@docker run --restart always --detach -p $(HOST_PORT):80/tcp -v $(FILESDIR):/$(FILESDIR) --env-file $(ENV_FILE) $(APP_NAME)
 
 start:
 	@echo 'Starting container...'
