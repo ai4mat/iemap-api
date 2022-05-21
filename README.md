@@ -12,7 +12,7 @@ git clone https://github.com/ai4mat/mi-api.git
 ```
 and jump to its folder:
 ```bash
-cd opendigitalheritage-dm
+cd mi-api
 ```
 
 ### Make some configurations
