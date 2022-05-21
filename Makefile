@@ -11,7 +11,7 @@ build:
 
 run: 
 	@echo 'Run container with fs support...'
-	@docker run --restart always --detach -p 8000:80/tcp --env-file $(ENV_FILE) $(APP_NAME)
+	@docker run --restart always --detach -p 8000:80/tcp -v $(FILESDIR):/$(FILESDIR) --env-file $(ENV_FILE) $(APP_NAME)
 
 start:
 	@echo 'Starting container...'
