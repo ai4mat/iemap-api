@@ -240,3 +240,8 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 
 [Integrate Sentry to FastAPI](https://philstories.medium.com/integrate-sentry-to-fastapi-7250603c070f)
 [Sentry ASGI Middleware for FASTAPI example](https://coveralls.io/builds/37501559/source?filename=app%2Fmain.py#L58)
+
+#### JINJA2 templates (FORMS)
+
+[How to Set Up a HTML App with FastAPI, Jinja, Forms & Templates](https://eugeneyan.com/writing/how-to-set-up-html-app-with-fastapi-jinja-forms-templates/)  
+[Forms and File Uploads with FastAPI and Jinja2](https://www.youtube.com/watch?v=L4WBFRQB7Lk)
