@@ -304,6 +304,9 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 ### JWT Authentication
 
 [Securing FastAPI with JWT Token-based Authentication](https://testdriven.io/blog/fastapi-jwt-auth/)
+[Fast API JWT Authentication with the FastAPI-JWT-Auth Extension](https://www.youtube.com/watch?v=1y4Nk4gH53Y)
+[Adding Authentication to Your FARM Stack App](https://www.mongodb.com/developer/how-to/FARM-Stack-Authentication/)  
+[FASTAPI-USERS](https://fastapi-users.github.io/fastapi-users/10.0/configuration/authentication/)
 
 ## Logging
 
