@@ -1,137 +1,274 @@
 # IEMAP RESTful/GraphQL API
 
+## General Informations
+
 This API allow you to do some CRUD operation with RESTful methods over the Mission Innovation mongoDB.
 
-# Quickstart
+This API can run in _development mode_ in you local machine or deployed as containerized _production-ready_ service on your server and/or on common public cloud providers.
 
-First, set environment variables and create database. For example using `docker`: ::
+### Official site
 
-    export MONGO_DB=rwdb MONGO_PORT=5432 MONGO_USER=MONGO MONGO_PASSWORD=MONGO
-    docker run --name mongodb --rm -e MONGO_USER="$MONGO_USER" -e MONGO_PASSWORD="$MONGO_PASSWORD" -e MONGO_DB="$MONGO_DB" MONGO
-    export MONGO_HOST=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' pgdb)
-    mongo --host=$MONGO_HOST --port=$MONGO_PORT --username=$MONGO_USER $MONGO_DB
+You can find the last working API version on the official site: [ai4mat.enea.it](https://ai4mat.enea.it)
 
-Then run the following commands to bootstrap your environment with `poetry`: ::
+### Official documentation
 
-    git clone https://github.com/markqiu/fastapi-realworld-example-app
-    cd fastapi-realworld-example-app
-    poetry install
-    poetry shell
+All routes are available on [`/docs`](https://ai4mat.enea.it/docs) or [`/redoc`](https://ai4mat.enea.it/redoc) paths with Swagger or ReDoc.
 
-Then create `.env` file (or rename and modify `.env.example`) in project root and set environment variables for application: ::
+## Project structure
 
-    touch .env
-    echo "PROJECT_NAME=FastAPI RealWorld Application Example" >> .env
-    echo DATABASE_URL=mongo://$MONGO_USER:$MONGO_PASSWORD@$MONGO_HOST:$MONGO_PORT/$MONGO_DB >> .env
-    echo SECRET_KEY=$(openssl rand -hex 32) >> .env
-    echo ALLOWED_HOSTS='"127.0.0.1", "localhost"' >> .env
+Files related to application are in the `app` directory. Application parts are:
 
-To run the web application in debug use::
+- models: pydantic models that used in crud or handlers
+- crud: CRUD for types from models (create new user/article/comment, check if user is followed by another, etc)
+- db: db specific utils
+- core: some general components (jwt, security, configuration)
+- api: handlers for routes
+- main.py: FastAPI application instance, CORS configuration and api router including
 
-    uvicorn app.main:app --reload
+## Installation
 
-# Deployment with Docker
+### Get the code
 
----
+First of all you need to get the code:
 
-You must have `docker` and `docker-compose` tools installed to work with material in this section.
-First, create `.env` file like in `Quickstart` section or modify `.env.example`. `MONGO_HOST` must be specified as `db` or modified in `docker-compose.yml` also. Then just run::
+```
+git clone https://github.com/ai4mat/mi-api.git
+```
 
-    docker-compose up -d
+and jump to its folder:
 
-Application will be available on `localhost` or `127.0.0.1` in your browser.
+```bash
+cd mi-api
+```
 
-# Web routes
+### Make some configurations
 
----
+You first need to setup configurations into the environments file. Copy the `env.sample` into `.env` and edit this file for each variable.
 
-All routes are available on `/docs` or `/redoc` paths with Swagger or ReDoc.
+### Start for development
 
-# Project structure
+#### 1 - Export the variables
 
----
+First of all you need to export variables into the environment with:
 
-Files related to application are in the `app` directory. `  
-Application parts are:
+```bash
+export $(xargs < .env)
+```
 
-::
+After that you need to create the python environment. You can choose to use `pip` or `poetry`.
 
-    models  - pydantic models that used in crud or handlers
-    crud    - CRUD for types from models (create new user/article/comment, check if user is followed by another, etc)
-    db      - db specific utils
-    core    - some general components (jwt, security, configuration)
-    api     - handlers for routes
-    main.py - FastAPI application instance, CORS configuration and api router including
+#### 2a - Setup python environment with pip
 
-## Configure
+Create the virtualenv (assuming you have python 3.X) and activate it:
 
-Use the `env.sample` to setup your mongoDB URI and save it as `.env`.
+```bash
+python3 -m venv <your-virtual-env>
+source <your-virtual-env>/bin/activate
+```
 
-## Run for development (locally)
+Then install requirements:
 
-1.  Get the environment varibales:
-    ```bash
-    export $(xargs < .env)
-    ```
-2.  Install `poetry`:
+```bash
+pip install -r requirements
+```
 
-    ```
-    curl -sSL https://install.python-poetry.org | python3 -
-    ```
+#### 2b - Setup python environment with poetry
 
-3.  Then run the following commands to bootstrap your environment with `poetry`:
+Install `poetry`:
 
-    ```
-    git clone https://github.com/markqiu/fastapi-realworld-example-app
-    cd fastapi-realworld-example-app
-    poetry install
-    poetry shell
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
 
-    ```
+Run the following commands to bootstrap your environment with `poetry`:
 
-4.  To run the web application in debug use:
+```bash
+poetry install
+poetry shell
+```
 
-    ```
-    uvicorn app.main:app --reload
-    ```
+#### 3 - Run the server
 
-    Or alternatively use:
+Now you're ready to start the API just with:
 
-    ```
-      python start_server.py
-    ```
+```bash
+cd app/
+uvicorn main:app --reload
+```
 
-## Run for production (containerized)
+### Run as container (Producion)
 
-1. Build container:
-   ```bash
-   make build
-   ```
-2. Run container
-   `bash make run `
-   Or, if you want to build and run in one command:
+#### 0 - Prerequisites
+
+In the following we are assuming that you can manage docker with a non-root user. To do so, run the following commands:
+
+```bash
+sudo groupadd docker
+sudo usermod -aG docker $USER
+```
+
+You had created the `docker` group first and then added your user to it. This way now you can build, run and stop containers with your user, without worrying about `sudo`.
+
+#### 1 - Configuration
+
+Add this to your server `.bashrc` or `.profile`:
+
+```bash
+export FILESDIR=<absoloute path where uploaded files are stored>
+```
+
+to set this variable both inside and outside container.
+
+#### 2 - Build image and run container
+
+Run the following command to build the image and run the container:
 
 ```bash
 make all
 ```
 
-## Check API
+> #### Note 1: Commands list
+>
+> To simplify container managment, a `Makefile` is provided. In the following are summarized all the available commands.
+>
+> | Action                                                       | `command`    |
+> | :----------------------------------------------------------- | :----------- |
+> | Build and run                                                | `make all`   |
+> | Build image                                                  | `make build` |
+> | Run container with FS                                        | `make run`   |
+> | Stop container                                               | `make stop`  |
+> | Start container                                              | `make start` |
+> | Kill (stop & remove) container)                              | `make kill`  |
+> | Clean (remove eventually dead containers and remove images)) | `make clean` |
+
+> #### Note 2: Run multiple containers
+>
+> As said before, you can run mutliple container on the same server, but you need to set ports. To do so, you need to run the following command:
+>
+> ```bash
+> make HOST_PORT=<port> run
+> ```
+
+#### 3 - Configure NGINX as reverse proxy
+
+Create a new virtual host in your `/etc/nginx/sites-available` folder and add the following configuration (supposing you are running with SSL/TLS encryption):
 
 ```bash
-curl http://0.0.0.0:8000/api
+server {
+    listen 80;
+    server_name <your-domain-name>;
+    return 301 https://$server_name$request_uri;
+}
+server {
+    listen 443 ssl;
+    server_name <your-domain-name>;
+    ssl_certificate /etc/letsencrypt/live/<your-domain-name>/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/<your-domain-name>/privkey.pem;
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-NginX-Proxy true;
+        proxy_redirect off;
+        proxy_pass_request_headers on;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
 ```
 
-If all is working properly, you'll get this output:
+#### 3 Bis - Configure NGINX as load balancer
+
+If you're running multiple containers on the same server, you can configure NGINX as load balancer. To do so, you need to create a new virtual host in your `/etc/nginx/sites-available` folder and add the following configuration:
+
+```bash
+upstream backend {
+    least_conn;
+    server 127.0.0.1:<port1>;
+    server 127.0.0.1:<port2>;
+    ...
+}
+server {
+    listen 80;
+    server_name <your-domain-name>;
+    return 301 https://$server_name$request_uri;
+}
+server {
+    listen 443 ssl;
+    server_name <your-domain-name>;
+    ssl_certificate /etc/letsencrypt/live/<your-domain-name>/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/<your-domain-name>/privkey.pem;
+    location / {
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-NginX-Proxy true;
+        proxy_redirect off;
+        proxy_pass_request_headers on;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+Please note that we have configured the load balancer with the _Least connections_ algorithm. This means that the server with the least connections will be used. If you want to use the _Round-Robin_ algorithm, you can change the `least_conn` in the `upstream` definition to `round_robin`.
+
+#### 4 - Check and restart NGINX
+
+Check the configuration and activate the new virtual host:
+
+```bash
+sudo nginx -t
+```
+
+If the check is ok, then create the symbolic link into the `/etc/nginx/sites-enabled` folder:
+
+```bash
+ln -s /etc/nginx/sites-available/<your-vhost-name> /etc/nginx/sites-enabled/<your-vhost-name>
+```
+
+Then restart the server:
+
+```bash
+systemctl restart nginx
+```
+
+### Check API
+
+- 1a- Check if the API is running locally
+
+```bash
+curl http://localhost:8000
+```
+
+- 1b- Check if the API is running on the server (with SSL/TLS encryption)
+
+```bash
+curl https://<server-hostname>
+```
+
+- 2- Expected behavior
+  If all is working properly, you'll get this output:
 
 ```json
-{ "message": "Welcome to the IEMAP API" }
+{
+  "request_method": "GET",
+  "path_name": "",
+  "message": "Reply from IEMAP API at <current time and date>"
+}
 ```
 
-## Check documentation
+# Check documentation
 
 Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and interactive documentation on APIs, where you can test routes.
 
-## ToDo
+# ToDo
 
 - [x] Add CORS policies
 - [ ] Add GET routes
@@ -245,3 +382,9 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 
 [How to Set Up a HTML App with FastAPI, Jinja, Forms & Templates](https://eugeneyan.com/writing/how-to-set-up-html-app-with-fastapi-jinja-forms-templates/)  
 [Forms and File Uploads with FastAPI and Jinja2](https://www.youtube.com/watch?v=L4WBFRQB7Lk)
+
+## Credits
+
+- Sergio Ferlito ([sergio.ferlito@enea.it](sergio.ferlito@enea.it)) for the development and optimization of the API.
+- Marco Puccini ([marco.puccini@enea.it](marco.puccini@enea.it)) for the initial idea, the first implementation and the DevOps ativities.
+- Claudio Ronchetti ([claudio.ronchetti@enea.it](claudio.ronchetti@enea.it)) for data model and general support.
