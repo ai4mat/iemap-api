@@ -1,14 +1,17 @@
 # IEMAP RESTful/GraphQL API
 
 ## General Informations
+
 This API allow you to do some CRUD operation with RESTful methods over the Mission Innovation mongoDB.
 
-This API can run in *development mode* in you local machine or deployed as containerized *production-ready* service on your server and/or on common public cloud providers.  
+This API can run in _development mode_ in you local machine or deployed as containerized _production-ready_ service on your server and/or on common public cloud providers.
 
 ### Official site
+
 You can find the last working API version on the official site: [ai4mat.enea.it](https://ai4mat.enea.it)
 
 ### Official documentation
+
 All routes are available on [`/docs`](https://ai4mat.enea.it/docs) or [`/redoc`](https://ai4mat.enea.it/redoc) paths with Swagger or ReDoc.
 
 ## Project structure
@@ -20,54 +23,71 @@ All files related to the application are in the `app` directory into the followi
  - api: handlers for routes
  - main.py: FastAPI application instance, CORS configuration and api router including
 
-
 ## Installation
+
 ### Get the code
+
 First of all you need to get the code:
+
 ```
 git clone https://github.com/ai4mat/mi-api.git
 ```
+
 and jump to its folder:
+
 ```bash
 cd mi-api
 ```
 
 ### Make some configurations
+
 You first need to setup configurations into the environments file. Copy the `env.sample` into `.env` and edit this file for each variable.
 
 ### Start for development
-  
+
 #### 1 - Export the variables
+
 First of all you need to export variables into the environment with:
+
 ```bash
 export $(xargs < .env)
 ```
 After that you need to create the python environment. You can choose to use `pip` or `poetry`.  
 
 #### 2a - Setup python environment with pip
+
 Create the virtualenv (assuming you have python 3.X) and activate it:
+
 ```bash
 python3 -m venv <your-virtual-env>
 source <your-virtual-env>/bin/activate
 ```
+
 Then install requirements:
+
 ```bash
 pip install -r requirements
-```  
+```
 
 #### 2b - Setup python environment with poetry
+
 Install `poetry`:
+
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
 ```
+
 Run the following commands to bootstrap your environment with `poetry`:
+
 ```bash
 poetry install
 poetry shell
 ```
 
 #### 3 - Run the server
+
 Now you're ready to start the API just with:
+
 ```bash
 cd app/
 uvicorn main:app --reload
@@ -76,22 +96,30 @@ uvicorn main:app --reload
 
 ### Run as container (Production)
 #### 0 - Prerequisites
+
 In the following we are assuming that you can manage docker with a non-root user. To do so, run the following commands:
+
 ```bash
 sudo groupadd docker
 sudo usermod -aG docker $USER
 ```
+
 You had created the `docker` group first and then added your user to it. This way now you can build, run and stop containers with your user, without worrying about `sudo`.
 
 #### 1 - Configuration
+
 Add this to your server `.bashrc` or `.profile`:
+
 ```bash
 export FILESDIR=<absoloute path where uploaded files are stored>
 ```
-to set this variable both inside and outside container. 
+
+to set this variable both inside and outside container.
 
 #### 2 - Build image and run container
+
 Run the following command to build the image and run the container:
+
 ```bash
 make all
 ```
@@ -108,7 +136,7 @@ In the following a complete list of commands defined into the `Makefile`, to sim
 |:---|:---|
 | Build and run | `make all` |
 | Build image | `make build` |
-| Run container with FS | `make run` |
+| Run container | `make run` |
 | Stop container | `make stop` |
 | Start container | `make start` |
 | Kill (stop & remove) container) | `make kill` |
@@ -120,7 +148,9 @@ In the following a complete list of commands defined into the `Makefile`, to sim
 >```
 
 #### 3 - Configure NGINX as reverse proxy
+
 Create a new virtual host in your `/etc/nginx/sites-available` folder and add the following configuration (supposing you are running with SSL/TLS encryption):
+
 ```bash
 server {
     listen 80;
@@ -150,8 +180,11 @@ server {
     }
 }
 ```
+
 #### 3 Bis - Configure NGINX as load balancer
+
 If you're running multiple containers on the same server, you can configure NGINX as load balancer. To do so, you need to create a new virtual host in your `/etc/nginx/sites-available` folder and add the following configuration:
+
 ```bash
 upstream backend {
     least_conn;
@@ -188,18 +221,25 @@ server {
     }
 }
 ```
+
 Please note that we have configured the load balancer with the _Least connections_ algorithm. This means that the server with the least connections will be used. If you want to use the _Round-Robin_ algorithm, you can change the `least_conn` in the `upstream` definition to `round_robin`.
 
 #### 4 - Check and restart NGINX
+
 Check the configuration and activate the new virtual host:
+
 ```bash
 sudo nginx -t
 ```
+
 If the check is ok, then create the symbolic link into the `/etc/nginx/sites-enabled` folder:
+
 ```bash
 ln -s /etc/nginx/sites-available/<your-vhost-name> /etc/nginx/sites-enabled/<your-vhost-name>
 ```
+
 Then restart the server:
+
 ```bash
 systemctl restart nginx
 ```
@@ -225,6 +265,7 @@ If all is working properly, you'll get this output:
 ```
 
 ## Credits
-- Sergio Ferlito ([sergio.ferlito@enea.it](sergio.ferlito@enea.it))  for the development and optimization of the API.  
-- Marco Puccini ([marco.puccini@enea.it](marco.puccini@enea.it)) for the initial idea, the first implementation and the DevOps ativities.  
+
+- Sergio Ferlito ([sergio.ferlito@enea.it](sergio.ferlito@enea.it)) for the development and optimization of the API.
+- Marco Puccini ([marco.puccini@enea.it](marco.puccini@enea.it)) for the initial idea, the first implementation and the DevOps ativities.
 - Claudio Ronchetti ([claudio.ronchetti@enea.it](claudio.ronchetti@enea.it)) for data model and general support.

@@ -4,8 +4,11 @@ from datetime import datetime
 from os import getcwd, path
 from logging.config import dictConfig
 from fastapi import FastAPI, Request, Response, status, HTTPException
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+
+# from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 # from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
@@ -94,8 +97,32 @@ app.add_event_handler("shutdown", close_mongo_connection)
 # actualy add routes
 app.include_router(api_router, prefix=Config.api_v1_str)
 
+# Jinja2 templates for static files
+# MOUNT A STATIC DIR IS NECESSARY!!!!
+app.mount(
+    "/static",
+    StaticFiles(directory=path.join(path.dirname(path.realpath(__file__)), "./static")),
+    name="static",
+)
+templates = Jinja2Templates(
+    directory=path.join(path.dirname(path.realpath(__file__)), "./templates")
+)
+
+
+@app.get("/items/{id}", response_class=HTMLResponse)
+async def read_item(request: Request, id: str):
+    return templates.TemplateResponse("item.html", {"request": request, "id": id})
+
+
+@app.get("/form", response_class=HTMLResponse)
+async def read_item(request: Request):
+    return templates.TemplateResponse("form.html", {"request": request})
+
+
 # TO SERVE FILES
 # http://0.0.0.0:8001/file/hashfile
+
+
 @app.api_route("/file/{name_file}", methods=["GET"])
 def get_file(name_file: str):
     file_full_path = getcwd() + "/uploaded/" + name_file

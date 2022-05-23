@@ -1,146 +1,3 @@
-# IEMAP RESTful/GraphQL API
-
-This API allow you to do some CRUD operation with RESTful methods over the Mission Innovation mongoDB.
-
-# Quickstart
-
-First, set environment variables and create database. For example using `docker`: ::
-
-    export MONGO_DB=rwdb MONGO_PORT=5432 MONGO_USER=MONGO MONGO_PASSWORD=MONGO
-    docker run --name mongodb --rm -e MONGO_USER="$MONGO_USER" -e MONGO_PASSWORD="$MONGO_PASSWORD" -e MONGO_DB="$MONGO_DB" MONGO
-    export MONGO_HOST=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' pgdb)
-    mongo --host=$MONGO_HOST --port=$MONGO_PORT --username=$MONGO_USER $MONGO_DB
-
-Then run the following commands to bootstrap your environment with `poetry`: ::
-
-    git clone https://github.com/markqiu/fastapi-realworld-example-app
-    cd fastapi-realworld-example-app
-    poetry install
-    poetry shell
-
-Then create `.env` file (or rename and modify `.env.example`) in project root and set environment variables for application: ::
-
-    touch .env
-    echo "PROJECT_NAME=FastAPI RealWorld Application Example" >> .env
-    echo DATABASE_URL=mongo://$MONGO_USER:$MONGO_PASSWORD@$MONGO_HOST:$MONGO_PORT/$MONGO_DB >> .env
-    echo SECRET_KEY=$(openssl rand -hex 32) >> .env
-    echo ALLOWED_HOSTS='"127.0.0.1", "localhost"' >> .env
-
-To run the web application in debug use::
-
-    uvicorn app.main:app --reload
-
-# Deployment with Docker
-
----
-
-You must have `docker` and `docker-compose` tools installed to work with material in this section.
-First, create `.env` file like in `Quickstart` section or modify `.env.example`. `MONGO_HOST` must be specified as `db` or modified in `docker-compose.yml` also. Then just run::
-
-    docker-compose up -d
-
-Application will be available on `localhost` or `127.0.0.1` in your browser.
-
-# Web routes
-
----
-
-All routes are available on `/docs` or `/redoc` paths with Swagger or ReDoc.
-
-# Project structure
-
----
-
-Files related to application are in the `app` directory. `  
-Application parts are:
-
-::
-
-    models  - pydantic models that used in crud or handlers
-    crud    - CRUD for types from models (create new user/article/comment, check if user is followed by another, etc)
-    db      - db specific utils
-    core    - some general components (jwt, security, configuration)
-    api     - handlers for routes
-    main.py - FastAPI application instance, CORS configuration and api router including
-
-## Configure
-
-Use the `env.sample` to setup your mongoDB URI and save it as `.env`.
-
-## Run for development (locally)
-
-1.  Get the environment varibales:
-    ```bash
-    export $(xargs < .env)
-    ```
-2.  Install `poetry`:
-
-    ```
-    curl -sSL https://install.python-poetry.org | python3 -
-    ```
-
-3.  Then run the following commands to bootstrap your environment with `poetry`:
-
-    ```
-    git clone https://github.com/markqiu/fastapi-realworld-example-app
-    cd fastapi-realworld-example-app
-    poetry install
-    poetry shell
-
-    ```
-
-4.  To run the web application in debug use:
-
-    ```
-    uvicorn app.main:app --reload
-    ```
-
-    Or alternatively use:
-
-    ```
-      python start_server.py
-    ```
-
-## Run for production (containerized)
-
-1. Build container:
-   ```bash
-   make build
-   ```
-2. Run container
-   `bash make run `
-   Or, if you want to build and run in one command:
-
-```bash
-make all
-```
-
-## Check API
-
-```bash
-curl http://0.0.0.0:8000/api
-```
-
-If all is working properly, you'll get this output:
-
-```json
-{ "message": "Welcome to the IEMAP API" }
-```
-
-## Check documentation
-
-Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and interactive documentation on APIs, where you can test routes.
-
-## ToDo
-
-- [x] Add CORS policies
-- [ ] Add GET routes
-- [ ] Add POST routes
-- [ ] Add PUT routes
-- [ ] Add DELETE routes
-- [x] Add GraphQL support
-- [ ] Add Authentication
-
 ## Useful resources
 
 ### FASTAPI
@@ -167,6 +24,9 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 ### JWT Authentication
 
 [Securing FastAPI with JWT Token-based Authentication](https://testdriven.io/blog/fastapi-jwt-auth/)
+[Fast API JWT Authentication with the FastAPI-JWT-Auth Extension](https://www.youtube.com/watch?v=1y4Nk4gH53Y)
+[Adding Authentication to Your FARM Stack App](https://www.mongodb.com/developer/how-to/FARM-Stack-Authentication/)  
+[FASTAPI-USERS](https://fastapi-users.github.io/fastapi-users/10.0/configuration/authentication/)
 
 ## Logging
 
@@ -240,3 +100,8 @@ Go to [http://0.0.0.0/api/docs](http://0.0.0.0/api/docs) to get a complete and i
 
 [Integrate Sentry to FastAPI](https://philstories.medium.com/integrate-sentry-to-fastapi-7250603c070f)
 [Sentry ASGI Middleware for FASTAPI example](https://coveralls.io/builds/37501559/source?filename=app%2Fmain.py#L58)
+
+#### JINJA2 templates (FORMS)
+
+[How to Set Up a HTML App with FastAPI, Jinja, Forms & Templates](https://eugeneyan.com/writing/how-to-set-up-html-app-with-fastapi-jinja-forms-templates/)  
+[Forms and File Uploads with FastAPI and Jinja2](https://www.youtube.com/watch?v=L4WBFRQB7Lk)
