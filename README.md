@@ -12,7 +12,7 @@ You can find the last working API version on the official site: [ai4mat.enea.it]
 All routes are available on [`/docs`](https://ai4mat.enea.it/docs) or [`/redoc`](https://ai4mat.enea.it/redoc) paths with Swagger or ReDoc.
 
 ## Project structure
-Files related to application are in the `app` directory. Application parts are:  
+All files related to the application are in the `app` directory into the following subfolders:
  - models: pydantic models that used in crud or handlers
  - crud: CRUD for types from models (create new user/article/comment, check if user is followed by another, etc)
  - db: db specific utils
@@ -42,7 +42,6 @@ First of all you need to export variables into the environment with:
 ```bash
 export $(xargs < .env)
 ```
-
 After that you need to create the python environment. You can choose to use `pip` or `poetry`.  
 
 #### 2a - Setup python environment with pip
@@ -75,7 +74,7 @@ uvicorn main:app --reload
 ```
 
 
-### Run as container (Producion)
+### Run as container (Production)
 #### 0 - Prerequisites
 In the following we are assuming that you can manage docker with a non-root user. To do so, run the following commands:
 ```bash
@@ -96,24 +95,28 @@ Run the following command to build the image and run the container:
 ```bash
 make all
 ```
+You can also run multiple containers from the same builded image. You need to build first and then run each container on different port. To do so, run the following command:
+```bash
+make build
+```
+And then run each container:
+```bash
+make HOST_PORT=<port> run
+```
+In the following a complete list of commands defined into the `Makefile`, to simplify container managment:
+| Action | `command` |
+|:---|:---|
+| Build and run | `make all` |
+| Build image | `make build` |
+| Run container with FS | `make run` |
+| Stop container | `make stop` |
+| Start container | `make start` |
+| Kill (stop & remove) container) | `make kill` |
+| Clean (remove eventually dead containers and remove images)) | `make clean` |
 
->#### Note 1: Commands list
->To simplify container managment, a `Makefile` is provided. In the following are summarized all the available commands. 
->
->| Action | `command` |
->|:---|:---|
->| Build and run | `make all` |
->| Build image | `make build` |
->| Run container with FS | `make run` |
->| Stop container | `make stop` |
->| Start container | `make start` |
->| Kill (stop & remove) container) | `make kill` |
->| Clean (remove eventually dead containers and remove images)) | `make clean` |
-
->#### Note 2: Run multiple containers
->As said before, you can run mutliple container on the same server, but you need to set ports. To do so, you need to run the following command:
+>Remeber: to get the list of running containers (with their IDs), run:
 >```bash
->make HOST_PORT=<port> run
+>docker ps
 >```
 
 #### 3 - Configure NGINX as reverse proxy
@@ -124,11 +127,14 @@ server {
     server_name <your-domain-name>;
     return 301 https://$server_name$request_uri;
 }
+
 server {
     listen 443 ssl;
     server_name <your-domain-name>;
+
     ssl_certificate /etc/letsencrypt/live/<your-domain-name>/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/<your-domain-name>/privkey.pem;
+    
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
@@ -153,16 +159,20 @@ upstream backend {
     server 127.0.0.1:<port2>;
     ...
 }
+
 server {
     listen 80;
     server_name <your-domain-name>;
     return 301 https://$server_name$request_uri;
 }
+
 server {
     listen 443 ssl;
     server_name <your-domain-name>;
+
     ssl_certificate /etc/letsencrypt/live/<your-domain-name>/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/<your-domain-name>/privkey.pem;
+
     location / {
         proxy_pass http://backend;
         proxy_set_header Host $host;
@@ -196,15 +206,15 @@ systemctl restart nginx
 
 ### Check API
 
-- 1a- Check if the API is running locally
+#### 1a - Check if the API is running locally
 ```bash
 curl http://localhost:8000
 ``` 
-- 1b- Check if the API is running on the server (with SSL/TLS encryption)
+#### 1b - Check if the API is running on the server (with SSL/TLS encryption)
 ```bash
 curl https://<server-hostname>
 ```
-- 2- Expected behavior
+#### 2 - Expected behavior
 If all is working properly, you'll get this output:
 ```json
 {
