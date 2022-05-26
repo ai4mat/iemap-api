@@ -959,7 +959,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "242822f74e265d0ead91cfbe4b9a47ee6280ae55e9bc1882daef1d8aff5602fd"
+content-hash = "04128cdaa6e482c2313a3ccac6df434936d1d726276ed3923e4685c59c9038b2"
 
 [metadata.files]
 aiofiles = [
