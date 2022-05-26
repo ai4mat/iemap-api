@@ -9,7 +9,7 @@
 
 ## General Informations
 
-This API allow you to do some CRUD operation with RESTful methods over the Mission Innovation mongoDB.
+This API allow you to do some CRUD operations with RESTful methods over the Mission Innovation mongoDB.
 
 This API can run in _development mode_ in you local machine or deployed as containerized _production-ready_ service on your server and/or on common public cloud providers.
 
