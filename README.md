@@ -1,4 +1,7 @@
 # IEMAP RESTful/GraphQL API
+![GitHub](https://img.shields.io/github/license/ai4mat/mi-api)
+![GitHub release](https://img.shields.io/github/v/release/ai4mat/mi-api?sort=semver)
+![GitHub top language](https://img.shields.io/github/languages/top/ai4mat/mi-api)
 
 ## General Informations
 
