@@ -51,3 +51,4 @@ class Config(object):
     api_v1_str = config["API_V1_STR"]
     files_dir = config["FILESDIR"]
     allowed_mime_types = allowed_mime_types
+    enable_onpremise_auth = bool(config["ENABLE_ONPREMISE_AUTH"] == "True")
