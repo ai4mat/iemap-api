@@ -2,18 +2,13 @@
 <html>
   <head>
     <title>Progressive Form | Multi Steps Form</title>
-
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
     <link
       href="{{ url_for('static', path='/form_styles.css') }}"
       rel="stylesheet"
     />
-
-    <!-- <script
-      type="module"
-      src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"
-    ></script> -->
   </head>
 
   <body>
@@ -21,9 +16,9 @@
     <form id="multistepsform">
       <!-- progressbar -->
       <ul id="progressbar">
-        <li class="active">Account Setup</li>
-        <li>Personal Details</li>
-        <li>Social Profiles</li>
+        <li class="active">Project details</li>
+        <li>Process</li>
+        <li>Project's files.</li>
       </ul>
       <!-- fieldsets -->
       <fieldset>
@@ -86,3 +81,4 @@
 </html>
 <!-- // https://www.youtube.com/watch?v=VdqtdKXxKhM //  -->
 <!-- https://github.com/WebDevSimplified/js-multistep-form -->
+<!-- https://attacomsian.com/blog/axios-javascript -->
