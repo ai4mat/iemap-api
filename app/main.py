@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 # from starlette.exceptions import HTTPException
-from starlette.middleware.cors import CORSMiddleware
+# from starlette.middleware.cors import CORSMiddleware
 
 # from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -25,6 +25,8 @@ sentry_sdk.init(
 )
 # import routes from a specific version
 from api.api_v1.api import router as api_router
+
+from api.on_premise_auth import router as on_premise_auth_router
 
 # import configuration
 from core.config import Config
@@ -97,6 +99,10 @@ app.add_event_handler("shutdown", close_mongo_connection)
 # actualy add routes
 app.include_router(api_router, prefix=Config.api_v1_str)
 
+
+if Config.enable_onpremise_auth:
+    app.include_router(on_premise_auth_router)
+
 # Jinja2 templates for static files
 # MOUNT A STATIC DIR IS NECESSARY!!!!
 app.mount(
@@ -150,4 +156,4 @@ if __name__ == "__main__":
     # Use this for debugging purposes only
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=80, log_level="info", reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8001, log_level="info", reload=True)
