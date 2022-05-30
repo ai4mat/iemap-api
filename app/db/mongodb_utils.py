@@ -13,8 +13,9 @@ from core.config import Config
 from db.mongodb import db
 from typing import Optional
 
-# ADD ANY ADDITIONAL FIELD AS DEFINED in app/models/schemas.py
+# originally User (this is the name of the collection in MongoDB)
 class UserAuth(BeanieBaseUser[PydanticObjectId]):
+    # ADD ANY ADDITIONAL FIELD AS DEFINED in app/models/schemas.py
     affiliation: Optional[str] = None
     pass
 
