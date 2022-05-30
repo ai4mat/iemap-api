@@ -37,7 +37,7 @@ if path_dot_env:
 
 class Config(object):
     # mongodb
-    app_port = int(config["PORT"])
+    app_port = int(config.get("PORT", 80))
     mongo_db = config["MONGO_DATABASE"]
     mongo_uri = config["MONGO_URI"]
     mongo_coll = config["MONGO_COLLECTION"]
