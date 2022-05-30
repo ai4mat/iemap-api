@@ -118,7 +118,7 @@ You had created the `docker` group first and then added your user to it. This wa
 Add this to your server `.bashrc` or `.profile`:
 
 ```bash
-export FILESDIR=<absoloute path where uploaded files are stored>
+export HOST_FILESDIR=<absoloute path where uploaded files are stored>
 ```
 
 to set this variable both inside and outside container.

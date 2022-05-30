@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 # from starlette.exceptions import HTTPException
-from starlette.middleware.cors import CORSMiddleware
+# from starlette.middleware.cors import CORSMiddleware
 
 # from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -25,6 +25,8 @@ sentry_sdk.init(
 )
 # import routes from a specific version
 from api.api_v1.api import router as api_router
+
+from api.on_premise_auth import router as on_premise_auth_router
 
 # import configuration
 from core.config import Config
@@ -43,11 +45,11 @@ dictConfig(logging_config)
 app = FastAPI(
     title="Mission Innovation IEMAP API",
     description="RESTful/GraphQL API for Mission Innovation - IEMAP stored data",
-    version="0.1.0",
+    version="1.1.0",
     terms_of_service="",
     contact={
         "name": "IEMAP API info",
-        "url": "https://github.com/<iemap?>/mi-api/",
+        "url": "https://github.com/ai4mat/mi-api/",
         "email": "iemap-api@enea.it",
     },
     license_info={"name": "MIT", "url": "https://mit-license.org/"},
@@ -96,6 +98,10 @@ app.add_event_handler("shutdown", close_mongo_connection)
 
 # actualy add routes
 app.include_router(api_router, prefix=Config.api_v1_str)
+
+
+if Config.enable_onpremise_auth:
+    app.include_router(on_premise_auth_router)
 
 # Jinja2 templates for static files
 # MOUNT A STATIC DIR IS NECESSARY!!!!
