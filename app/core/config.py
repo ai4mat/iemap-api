@@ -24,18 +24,20 @@ allowed_mime_types = [
 ]
 
 path_dot_env = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../.env")
-
+# load environment variables
 config = {
-    **dotenv_values(path_dot_env),  # load shared development variables
-    # find_dotenv(raise_error_if_not_found=True, usecwd=False)
-    # ),  # load shared development variables
-    # **dotenv_values(".env.secret"),  # load sensitive variables
-    # **os.environ,  # override loaded values with environment variables
+    **os.environ,
 }
+if path_dot_env:
+    # override loaded values with environment variables from .env file
+    config = {
+        **dotenv_values(path_dot_env),
+    }
 
 
 class Config(object):
     # mongodb
+    app_port = int(config["PORT"])
     mongo_db = config["MONGO_DATABASE"]
     mongo_uri = config["MONGO_URI"]
     mongo_coll = config["MONGO_COLLECTION"]
