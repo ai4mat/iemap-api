@@ -1,3 +1,4 @@
+from zlib import DEF_BUF_SIZE
 from beanie import init_beanie
 from beanie import PydanticObjectId
 
@@ -10,14 +11,16 @@ logger = logging.getLogger("ai4mat")
 from motor.motor_asyncio import AsyncIOMotorClient
 from core.config import Config
 from db.mongodb import db
+from typing import Optional
 
-
-class User(BeanieBaseUser[PydanticObjectId]):
+# ADD ANY ADDITIONAL FIELD AS DEFINED in app/models/schemas.py
+class UserAuth(BeanieBaseUser[PydanticObjectId]):
+    affiliation: Optional[str] = None
     pass
 
 
 async def get_user_db():
-    yield BeanieUserDatabase(User)
+    yield BeanieUserDatabase(UserAuth)
 
 
 async def connect_to_mongo():
@@ -30,15 +33,15 @@ async def connect_to_mongo():
         f"Connection succesfully established at {datetime.now().strftime('%Y-%B-%d %H:%M:%S')}."
     )
     if Config.enable_onpremise_auth:
-        collection_users = "user_db_jwt"
+        db_users = db.client[Config.mongo_db]
         await init_beanie(
-            database=db.client[collection_users],
+            database=db_users,
             document_models=[
-                User,
+                UserAuth,
             ],
         )
         logger.info(
-            f"Succesfully initialize On-Premise AUTH using collection {collection_users}."
+            f"Succesfully initialize On-Premise AUTH using collection User and db {db_users.name}."
         )
 
 
