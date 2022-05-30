@@ -26,11 +26,11 @@ allowed_mime_types = [
 path_dot_env = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../.env")
 
 config = {
-    # **dotenv_values(path_dot_env),  # load shared development variables
+    **dotenv_values(path_dot_env),  # load shared development variables
     # find_dotenv(raise_error_if_not_found=True, usecwd=False)
     # ),  # load shared development variables
     # **dotenv_values(".env.secret"),  # load sensitive variables
-    **os.environ,  # override loaded values with environment variables
+    # **os.environ,  # override loaded values with environment variables
 }
 
 

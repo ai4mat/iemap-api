@@ -67,5 +67,22 @@ $(".previous").click(function () {
 });
 
 $(".submit").click(function () {
+  register();
   return false;
 });
+
+register = function () {
+  var email = $("#email").val();
+  var password = $("#pwd").val();
+  var affiliation = $("#affiliation").val();
+  alert(email);
+  // // http://localhost:8001/auth/register
+  axios
+    .post("/auth/register", {
+      email: email,
+      password: password,
+      affiliation: affiliation,
+    })
+    .then((response) => console.log(response))
+    .catch((error) => console.log(error));
+};
