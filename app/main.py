@@ -45,11 +45,11 @@ dictConfig(logging_config)
 app = FastAPI(
     title="Mission Innovation IEMAP API",
     description="RESTful/GraphQL API for Mission Innovation - IEMAP stored data",
-    version="0.1.0",
+    version="1.1.0",
     terms_of_service="",
     contact={
         "name": "IEMAP API info",
-        "url": "https://github.com/<iemap?>/mi-api/",
+        "url": "https://github.com/ai4mat/mi-api/",
         "email": "iemap-api@enea.it",
     },
     license_info={"name": "MIT", "url": "https://mit-license.org/"},
