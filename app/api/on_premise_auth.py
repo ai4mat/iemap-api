@@ -1,14 +1,28 @@
 from fastapi import APIRouter
 import fastapi_users
 from models.schemas import UserCreate, UserRead, UserUpdate
-from models.users import auth_backend, current_active_user, fastapi_users
+from models.users import (
+    auth_backend,
+    auth_backend_cookie,
+    current_active_user,
+    fastapi_users,
+)
 
 router = APIRouter()
 
+# A route for each auth_backend is required
 
+# route for JWT backend in Bearer
 router.include_router(
     fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"]
 )
+# route for JWT backend in Cookie
+router.include_router(
+    fastapi_users.get_auth_router(auth_backend_cookie),
+    prefix="/auth/cookie",
+    tags=["auth"],
+)
+
 router.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
     prefix="/auth",
