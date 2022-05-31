@@ -7,12 +7,13 @@ from fastapi_users.authentication import (
     AuthenticationBackend,
     BearerTransport,
     JWTStrategy,
+    CookieTransport,
 )
 from fastapi_users.db import BeanieUserDatabase, ObjectIDIDMixin
 
 from db.mongodb_utils import UserAuth, get_user_db
 
-SECRET = "SECRET"
+SECRET = "2cc29249a2602c779e08c0b9cac8ecf8694159decbc0698b"
 
 
 class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
@@ -41,6 +42,7 @@ async def get_user_manager(user_db: BeanieUserDatabase = Depends(get_user_db)):
 
 
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
+cookie_transport = CookieTransport(cookie_httponly=True, cookie_secure=False)
 
 
 def get_jwt_strategy() -> JWTStrategy:
@@ -53,8 +55,12 @@ auth_backend = AuthenticationBackend(
     get_strategy=get_jwt_strategy,
 )
 
+auth_backend_cookie = AuthenticationBackend(
+    name="cookie", transport=cookie_transport, get_strategy=get_jwt_strategy
+)
+
 fastapi_users = FastAPIUsers[UserAuth, PydanticObjectId](
-    get_user_manager, [auth_backend]
+    get_user_manager, [auth_backend, auth_backend_cookie]
 )
 
 current_active_user = fastapi_users.current_user(active=True)
