@@ -28,6 +28,8 @@
 [Adding Authentication to Your FARM Stack App](https://www.mongodb.com/developer/how-to/FARM-Stack-Authentication/)  
 [FASTAPI-USERS](https://fastapi-users.github.io/fastapi-users/10.0/configuration/authentication/)  
 [FASTAPI-USERS routes](https://github.com/fastapi-users/fastapi-users/tree/master/fastapi_users/router)
+[How to Secure JWT in a Single-Page Application](https://javascript.plainenglish.io/how-to-secure-jwt-in-a-single-page-application-6a46e69fc393)  
+[JWT authentication: Best practices and when to use it](https://blog.logrocket.com/jwt-authentication-best-practices/#store-jwts-securely)
 
 ## Logging
 
