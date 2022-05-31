@@ -16,17 +16,25 @@
     <form id="multistepsform">
       <!-- progressbar -->
       <ul id="progressbar">
-        <li class="active">Project details</li>
-        <li>Process</li>
+        <li class="active">Create Account</li>
+        <li>Project details</li>
         <li>Project's files.</li>
       </ul>
       <!-- fieldsets -->
-      <fieldset>
+      <fieldset id="account">
         <h2 class="fs-title">Create your account</h2>
         <h3 class="fs-subtitle"></h3>
-        <input type="text" name="email" placeholder="Email" />
-        <input type="password" name="pass" placeholder="Password" />
-        <input type="password" name="cpass" placeholder="Confirm Password" />
+        <input id="email" type="text" name="email" placeholder="Email" />
+        <input
+          id="affiliation"
+          type="text"
+          name="affiliation"
+          placeholder="Affiliation"
+        />
+        <input id="pwd" type="password" name="pass" placeholder="Password" />
+        <input id=""pwd-r" type="password" name="cpass" placeholder="Confirm
+        Password" />
+
         <input
           type="button"
           name="next"
@@ -36,7 +44,7 @@
       </fieldset>
 
       <fieldset>
-        <h2 class="fs-title">Personal Details</h2>
+        <h2 class="fs-title">Project Details</h2>
         <h3 class="fs-subtitle">We will never sell it</h3>
         <input type="text" name="fname" placeholder="First Name" />
         <input type="text" name="lname" placeholder="Last Name" />
