@@ -1,16 +1,17 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 import fastapi_users
+from db.mongodb_utils import UserAuth
 from models.schemas import UserCreate, UserRead, UserUpdate
 from models.users import (
     auth_backend,
     auth_backend_cookie,
-    current_active_user,
+    # current_active_user,
     fastapi_users,
 )
 
 router = APIRouter()
 
-# A route for each auth_backend is required
+# A route for EACH auth_backend is required ******************
 
 # route for JWT backend in Bearer
 router.include_router(
