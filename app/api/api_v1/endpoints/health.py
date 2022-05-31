@@ -1,7 +1,12 @@
+from typing import Dict
 from fastapi import APIRouter, Depends, Response, status, Request
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
+from db.mongodb_utils import UserAuth
+from models.users import (
+    current_active_user,
+)
 
 # from core.jwt import get_current_user_authorizer
 from core.auth import JWTBearer, signJWT, decodeJWT
@@ -10,6 +15,19 @@ from crud.health import checkDB
 from db.mongodb import AsyncIOMotorClient, get_database
 
 router = APIRouter()
+
+
+# UserAuth is the Beanie Model for storing user credentials
+@router.get(
+    "/health/on-premise-auth",
+    tags=["health"],
+    status_code=status.HTTP_200_OK,
+    summary="Check if the on-premise auth service is up and running",
+    description="Pass a JWT using Beared in Header or using an HTTPonly Cookie",
+)
+async def check_on_premise_auth(user: UserAuth = Depends(current_active_user)):
+    return {"message": f"{user.email} ({user.affiliation}) you are welcome!"}
+
 
 # http://0.0.0.0:8001/api/v1/health
 # CHECK DB CONNECTION
