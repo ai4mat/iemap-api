@@ -41,13 +41,21 @@ async def get_user_manager(user_db: BeanieUserDatabase = Depends(get_user_db)):
     yield UserManager(user_db)
 
 
+# TRASPORT TO USE FOR AUTHENTICATION
+# bearer is for token in header as Bearer (useful for REST API service)
+# cookie is for token in cookie (useful for web app)
+# https://fastapi-users.github.io/fastapi-users/10.0/configuration/authentication/transports/cookie/
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 cookie_transport = CookieTransport(cookie_httponly=True, cookie_secure=False)
 
-
+# DEFINE JWT STRATEGY
 def get_jwt_strategy() -> JWTStrategy:
     return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
 
+
+# DEFINE TWO AUTHENTICATION BACKEND
+# using same strategy for both backend
+# one use JWT in header, the other use JWT in cookie (HTTPONLY)
 
 auth_backend = AuthenticationBackend(
     name="jwt",
@@ -59,6 +67,7 @@ auth_backend_cookie = AuthenticationBackend(
     name="cookie", transport=cookie_transport, get_strategy=get_jwt_strategy
 )
 
+# ADD AUTHENTICATION BACKEND TO FASTAPI USERS
 fastapi_users = FastAPIUsers[UserAuth, PydanticObjectId](
     get_user_manager, [auth_backend, auth_backend_cookie]
 )
