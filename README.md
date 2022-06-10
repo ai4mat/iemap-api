@@ -20,10 +20,10 @@ You can find the last working API version on the official site: [ai4mat.enea.it]
 ### Official documentation
 
 All routes are described on:
-- [`https://ai4mat.enea.it/docs`](https://ai4mat.enea.it/docs) with Swagger
-- [`https://ai4mat.enea.it/redoc`](https://ai4mat.enea.it/redoc) with ReDoc.
+- [`ai4mat.enea.it/docs`](https://ai4mat.enea.it/docs) with Swagger
+- [`ai4mat.enea.it/redoc`](https://ai4mat.enea.it/redoc) with ReDoc.
   
-A complete documentation is available on [ReadTheDocs](https://iemap-api.readthedocs.io/en/latest/index.html)
+A complete documentation is available on [ReadTheDocs](https://iemap-api.readthedocs.io/en/latest/index.html).
 
 ## Project structure
 All files related to the application are in the `app` directory into the following subfolders:
