@@ -19,11 +19,18 @@ async def add_project(conn: AsyncIOMotorClient, project: IEMAPModel):
     return result.inserted_id
 
 
-async def list_projects(conn: AsyncIOMotorClient, project: IEMAPModel, limit, skip):
+async def list_projects(conn: AsyncIOMotorClient, limit, skip):
+    """Function to list all projects in DB
 
-    """Function returns `page_size` number of documents after last_id
-    and the new last_id.
+    Args:
+        conn (AsyncIOMotorClient): Motor MongoDB client connection
+        limit (int): number of documents to return
+        skip (int): number of documents to skip
+
+    Returns:
+        List[Any]: list of documents as result of the query (find({}))
     """
+
     coll = conn[database_name][ai4mat_collection_name]
     list_projects = await coll.find({}, {"_id": 0}, limit=limit, skip=skip).to_list(
         None
@@ -91,7 +98,7 @@ async def add_project_file(
     fileExt: str,
     fileName: str,
 ):
-    """Function to add file to PROJECT
+    """# Function to add file to PROJECT
     (using filne name hash and original extention)
     The document to update is identified by the mdocuent's id, and file's name and extention.
 
