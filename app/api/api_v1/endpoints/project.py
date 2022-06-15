@@ -247,6 +247,27 @@ async def create_property_file(
     file: UploadFile = File(...),
     db: AsyncIOMotorClient = Depends(get_database),
 ):
+    """Add a new property file to an existing project
+
+    Args:
+        project_id (ObjectIdStr): id of project to add property file to
+        property_name (str): name of property to which add the file
+        property_type (str): name of property type to which add the file
+        file (UploadFile): file to upload. Defaults to File(...).
+        db (AsyncIOMotorClient, optional): Motor client connection to MongoDB. Defaults to Depends(get_database).
+
+    Raises:
+        HTTPException: HTTP Exception 400 is returned if it was not possible to add the file to the project
+
+
+    Returns:
+        dict:{
+            "file_name": name of file added to property,
+            "file_hash": hash of file as saved on file system,
+            "file_size": file size in human readable form
+        }
+    """
+
     id_mongodb = BsonObjectId(project_id)
     # Check file MimeType
     if file.content_type not in Config.allowed_mime_types:
@@ -278,7 +299,7 @@ async def create_property_file(
             db, id_mongodb, hash, str_file_size, file_ext, property_name, property_type
         )
         if modified_count == 0:
-            raise HTTPException(400, detail="File Not Found")
+            raise HTTPException(400, detail="Unable to add property file")
         return {
             "file_name": f"{file.filename}",
             "file_hash": f"{hash}",
