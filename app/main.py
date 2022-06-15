@@ -131,6 +131,17 @@ async def read_item(request: Request):
 
 @app.api_route("/file/{name_file}", methods=["GET"])
 def get_file(name_file: str):
+    """Download file from server
+
+    Args:
+        name_file (str): file name expressed as <hash>.<extension>
+
+    Raises:
+        HTTPException: HTTP_404_NOT_FOUND if file was not found
+
+    Returns:
+        stream: binary data of file
+    """
     file_full_path = getcwd() + "/uploaded/" + name_file
     if path.exists(file_full_path):
         return FileResponse(path=getcwd() + "/uploaded/" + name_file)
