@@ -59,16 +59,34 @@ router = APIRouter()
 )
 async def show_projects(
     db: AsyncIOMotorClient = Depends(get_database),
-    project: NewProjectModel = None,
+    # project: NewProjectModel = None,
     page_size: Optional[int] = 10,
     page_number: Optional[int] = 1,
 ):
+    """Get all projects paginated (using skip & limit)
+
+    Args:
+        db (AsyncIOMotorClient): Motor client connection to MongoDB. Defaults to Depends(get_database).
+        page_size (Optional[int], optional): size paginated results. Defaults to 10.
+        page_number (Optional[int], optional): actual page number returned. Defaults to 1.
+
+    Returns:
+        dict:  {"skip" (int): number of docs to skip,
+                "page_size" (int): number of results to return in a single page,
+                "page_number" (int): actual page number returned,
+                "page_tot" (int): total number of pages available,
+                "number_docs" (int): total number of documents in collection,
+                "data" list[ProjetModel]: list of all projects saved in database}
+    """
 
     # id is a ObjectId
     n_docs = await count_projects(db)
     skip = page_size * (page_number - 1)
-    page_tot = n_docs // page_size
-    result = await list_projects(db, project, page_size, skip)
+    if page_size > n_docs:
+        page_tot = 1
+    else:
+        page_tot = (n_docs // page_size) + (n_docs - page_size) if n_docs > 0 else 0
+    result = await list_projects(db, page_size, skip)
 
     return {
         "skip": skip,
@@ -123,10 +141,15 @@ async def add_new_project(
     db: AsyncIOMotorClient = Depends(get_database),
     project: NewProjectModel = None,
 ):
-    """Add a new project
+    """# Add a new project
 
-    Parameters: NewProjectModel - the project to add
-    Returns: dict - {"inserted_id": ObjectID} where ObjectID is the document ID inserted in DB
+    Args:
+    -----------
+        **NewProjectModel** - the project to add
+
+    Returns:
+    --------
+        **dict** - {"inserted_id": ObjectID} where ObjectID is the document ID inserted in DB
                     (use this ID as path parameter to add files to project)
     """
     logger.info(f"add_new_project: {project.dict()}")
@@ -147,27 +170,28 @@ async def create_project_file(
     file: UploadFile = File(...),
     db: AsyncIOMotorClient = Depends(get_database),
 ):
-    """Add a new file to a project
+    """Add a new file to an existing project
 
-    Parameters:
-    ----------
-                project_id: ObjectID - the project ID (returned by {URI}/api/v1/project/add)
-                file_name: str - the file name
-                NOTE!   file_name is the file name without the extension
-                        file extention is checked against extensions already in the database
-                        if the extention of file uploaded and that present in DB doest not match
-                        nothing is added to the database and a HTTP_500_INTERNAL_SERVER_ERROR is returned
-    Returns:
-    ----------
-        dict - {"file_name": str,  "file_hash": str, "file_size": str}
+    Note:
+        project_id, file_name and file extention (retrieved by backend) are used
+        to find the project to which add the file, if these details does not match that
+        already on server, the file is not added to the project,
+        and a HTTP_500_INTERNAL_SERVER_ERROR is returned.
+
+    Args:
+        file_name (str): name of file to add
+        project_id (ObjectIdStr): the project ID as saved on DB  (returned by {URI}/api/v1/project/add)
+        file (UploadFile): the file to add to the project (saved on filesystem using its hash)
+        db (AsyncIOMotorClient): Motor client connection to MongoDB.
 
     Raises:
-    -------
-        HTTPException 400 if a file type is not allowed
-        (Allowed file types are: CSV, PDF, TXT, CIF, DOC)
+        HTTPException: HTTP 400 if the file to add to project is not a PDF,CSV, TXT, CIF or DOC
+        HTTPException: HTTP 500 INTERNAL_SERVER_ERROR if it fails to update document in DB
 
-        HTTPException 500 if document was not updated
+    Returns:
+        dict:{"file_name": name of file, "file_hash": hash of file as saved on file system, "file_size": file size in human readable form}
     """
+
     # convert path parameter "project_id" to ObjectId
     id_mongodb = BsonObjectId(project_id)
     # Check file MimeType
