@@ -123,6 +123,12 @@ async def add_new_project(
     db: AsyncIOMotorClient = Depends(get_database),
     project: NewProjectModel = None,
 ):
+    """Add a new project
+
+    Parameters: NewProjectModel - the project to add
+    Returns: dict - {"inserted_id": ObjectID} where ObjectID is the document ID inserted in DB
+                    (use this ID as path parameter to add files to project)
+    """
     logger.info(f"add_new_project: {project.dict()}")
     # id is a ObjectId
     id = await add_project(db, project=project)
@@ -141,6 +147,28 @@ async def create_project_file(
     file: UploadFile = File(...),
     db: AsyncIOMotorClient = Depends(get_database),
 ):
+    """Add a new file to a project
+
+    Parameters:
+    ----------
+                project_id: ObjectID - the project ID (returned by {URI}/api/v1/project/add)
+                file_name: str - the file name
+                NOTE!   file_name is the file name without the extension
+                        file extention is checked against extensions already in the database
+                        if the extention of file uploaded and that present in DB doest not match
+                        nothing is added to the database and a HTTP_500_INTERNAL_SERVER_ERROR is returned
+    Returns:
+    ----------
+        dict - {"file_name": str,  "file_hash": str, "file_size": str}
+
+    Raises:
+    -------
+        HTTPException 400 if a file type is not allowed
+        (Allowed file types are: CSV, PDF, TXT, CIF, DOC)
+
+        HTTPException 500 if document was not updated
+    """
+    # convert path parameter "project_id" to ObjectId
     id_mongodb = BsonObjectId(project_id)
     # Check file MimeType
     if file.content_type not in Config.allowed_mime_types:
@@ -160,13 +188,23 @@ async def create_project_file(
         structure, distinct_species, lattice = None, None, None
         if file_ext == "cif":
             structure, distinct_species, lattice = parse_cif(file_to_write)
+        # compute file hash  & rename file on FileSystem accordgly    ###########
         hash = hash_file(file_to_write)
         new_file_name = f"{upload_dir}/{hash}.{file_ext}"
         rename(file_to_write, new_file_name)
+        #########################################################################
+        # get file size
         file_size = get_str_file_size(new_file_name)
+
+        # add file to docoment in DB having id == project_id
         update_modified_count = await add_project_file(
             db, id_mongodb, hash, file_size, file_ext, file_name.split(".")[0]
         )
+        if update_modified_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Document not updated",
+            )
     return {
         "file_name": f"{file.filename}",
         "file_hash": f"{hash}",
