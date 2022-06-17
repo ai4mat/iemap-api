@@ -59,16 +59,34 @@ router = APIRouter()
 )
 async def show_projects(
     db: AsyncIOMotorClient = Depends(get_database),
-    project: NewProjectModel = None,
+    # project: NewProjectModel = None,
     page_size: Optional[int] = 10,
     page_number: Optional[int] = 1,
 ):
+    """Get all projects paginated (using skip & limit)
+
+    Args:
+        db (AsyncIOMotorClient): Motor client connection to MongoDB. Defaults to Depends(get_database).
+        page_size (Optional[int], optional): size paginated results. Defaults to 10.
+        page_number (Optional[int], optional): actual page number returned. Defaults to 1.
+
+    Returns:
+        dict:  {"skip" (int): number of docs to skip,
+                "page_size" (int): number of results to return in a single page,
+                "page_number" (int): actual page number returned,
+                "page_tot" (int): total number of pages available,
+                "number_docs" (int): total number of documents in collection,
+                "data" list[ProjetModel]: list of all projects saved in database}
+    """
 
     # id is a ObjectId
     n_docs = await count_projects(db)
     skip = page_size * (page_number - 1)
-    page_tot = n_docs // page_size
-    result = await list_projects(db, project, page_size, skip)
+    if page_size > n_docs:
+        page_tot = 1
+    else:
+        page_tot = (n_docs // page_size) + (n_docs - page_size) if n_docs > 0 else 0
+    result = await list_projects(db, page_size, skip)
 
     return {
         "skip": skip,
@@ -123,6 +141,17 @@ async def add_new_project(
     db: AsyncIOMotorClient = Depends(get_database),
     project: NewProjectModel = None,
 ):
+    """# Add a new project
+
+    Args:
+    -----------
+        **NewProjectModel** - the project to add
+
+    Returns:
+    --------
+        **dict** - {"inserted_id": ObjectID} where ObjectID is the document ID inserted in DB
+                    (use this ID as path parameter to add files to project)
+    """
     logger.info(f"add_new_project: {project.dict()}")
     # id is a ObjectId
     id = await add_project(db, project=project)
@@ -141,6 +170,29 @@ async def create_project_file(
     file: UploadFile = File(...),
     db: AsyncIOMotorClient = Depends(get_database),
 ):
+    """Add a new file to an existing project
+
+    Note:
+        project_id, file_name and file extention (retrieved by backend) are used
+        to find the project to which add the file, if these details does not match that
+        already on server, the file is not added to the project,
+        and a HTTP_500_INTERNAL_SERVER_ERROR is returned.
+
+    Args:
+        file_name (str): name of file to add
+        project_id (ObjectIdStr): the project ID as saved on DB  (returned by {URI}/api/v1/project/add)
+        file (UploadFile): the file to add to the project (saved on filesystem using its hash)
+        db (AsyncIOMotorClient): Motor client connection to MongoDB.
+
+    Raises:
+        HTTPException: HTTP 400 if the file to add to project is not a PDF,CSV, TXT, CIF or DOC
+        HTTPException: HTTP 500 INTERNAL_SERVER_ERROR if it fails to update document in DB
+
+    Returns:
+        dict:{"file_name": name of file, "file_hash": hash of file as saved on file system, "file_size": file size in human readable form}
+    """
+
+    # convert path parameter "project_id" to ObjectId
     id_mongodb = BsonObjectId(project_id)
     # Check file MimeType
     if file.content_type not in Config.allowed_mime_types:
@@ -160,13 +212,23 @@ async def create_project_file(
         structure, distinct_species, lattice = None, None, None
         if file_ext == "cif":
             structure, distinct_species, lattice = parse_cif(file_to_write)
+        # compute file hash  & rename file on FileSystem accordgly    ###########
         hash = hash_file(file_to_write)
         new_file_name = f"{upload_dir}/{hash}.{file_ext}"
         rename(file_to_write, new_file_name)
+        #########################################################################
+        # get file size
         file_size = get_str_file_size(new_file_name)
+
+        # add file to docoment in DB having id == project_id
         update_modified_count = await add_project_file(
             db, id_mongodb, hash, file_size, file_ext, file_name.split(".")[0]
         )
+        if update_modified_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Document not updated",
+            )
     return {
         "file_name": f"{file.filename}",
         "file_hash": f"{hash}",
@@ -185,6 +247,27 @@ async def create_property_file(
     file: UploadFile = File(...),
     db: AsyncIOMotorClient = Depends(get_database),
 ):
+    """Add a new property file to an existing project
+
+    Args:
+        project_id (ObjectIdStr): id of project to add property file to
+        property_name (str): name of property to which add the file
+        property_type (str): name of property type to which add the file
+        file (UploadFile): file to upload. Defaults to File(...).
+        db (AsyncIOMotorClient, optional): Motor client connection to MongoDB. Defaults to Depends(get_database).
+
+    Raises:
+        HTTPException: HTTP Exception 400 is returned if it was not possible to add the file to the project
+
+
+    Returns:
+        dict:{
+            "file_name": name of file added to property,
+            "file_hash": hash of file as saved on file system,
+            "file_size": file size in human readable form
+        }
+    """
+
     id_mongodb = BsonObjectId(project_id)
     # Check file MimeType
     if file.content_type not in Config.allowed_mime_types:
@@ -216,7 +299,7 @@ async def create_property_file(
             db, id_mongodb, hash, str_file_size, file_ext, property_name, property_type
         )
         if modified_count == 0:
-            raise HTTPException(400, detail="File Not Found")
+            raise HTTPException(400, detail="Unable to add property file")
         return {
             "file_name": f"{file.filename}",
             "file_hash": f"{hash}",

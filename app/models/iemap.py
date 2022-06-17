@@ -209,7 +209,7 @@ class fileType(Enum):
 
 
 class FileProject(BaseModel):
-    hash: str
+    hash: Optional[str]
     description: str
     name: str
     extention: str

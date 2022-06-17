@@ -19,11 +19,18 @@ async def add_project(conn: AsyncIOMotorClient, project: IEMAPModel):
     return result.inserted_id
 
 
-async def list_projects(conn: AsyncIOMotorClient, project: IEMAPModel, limit, skip):
+async def list_projects(conn: AsyncIOMotorClient, limit, skip):
+    """Function to list all projects in DB
 
-    """Function returns `page_size` number of documents after last_id
-    and the new last_id.
+    Args:
+        conn (AsyncIOMotorClient): Motor MongoDB client connection
+        limit (int): number of documents to return
+        skip (int): number of documents to skip
+
+    Returns:
+        List[Any]: list of documents as result of the query (find({}))
     """
+
     coll = conn[database_name][ai4mat_collection_name]
     list_projects = await coll.find({}, {"_id": 0}, limit=limit, skip=skip).to_list(
         None
@@ -91,8 +98,23 @@ async def add_project_file(
     fileExt: str,
     fileName: str,
 ):
-    """Function to add file hash to PROJECT
-    The document to update is identified by the document's id, and file's name and extention.
+    """# Function to add file to PROJECT
+    (using filne name hash and original extention)
+    The document to update is identified by the mdocuent's id, and file's name and extention.
+
+    Parameters:
+    -----------
+        conn: AsyncIOMotorClient - Motor MongoDB client connection
+        id: str - MongoDB document's id (ObjectId) to update
+        fileHash: str - file hash
+        fileSize: str - file size
+        fileExt: str - file extention
+        fileName: str - file name
+
+    Returns:
+    --------
+        modified_count: int - number of modified documents
+
     """
     #  {"_id":ObjectId("62752dd88856514dab27dd8e")},
     # {$set:{"process.properties.$[elem].hash":"hash-2"}},{arrayFilters:[{$and:[{"elem.name":"H2o"},{"elem.type":"2D"}]}]}
@@ -113,7 +135,9 @@ async def add_project_file(
             {"$and": [{"elem.name": fileName}, {"elem.extention": fileExt}]}
         ],
     )
-    return result_update.modified_count
+    num_records_updated = result_update.modified_count
+
+    return num_records_updated
 
 
 async def find_project_file_by_hash(conn: AsyncIOMotorClient, file_hash: str, id: str):
