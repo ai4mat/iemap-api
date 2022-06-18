@@ -426,11 +426,18 @@ async def form_add_project_file(
             if form_data.publication_name:
                 file.publication = Publication(
                     name=form_data.publication_name,
-                    date=datetime(form_data.publication_date),
+                    date=form_data.publication_date,  # date conversion is done in Publication class
                     url=form_data.publication_url,
                 )
 
-            result = await add_project_file_and_data(db, project_id, file)
+            n_modified, n_matched = await add_project_file_and_data(
+                db, project_id, file
+            )
+            if n_modified == 0:
+                raise HTTPException(
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Unable to add file to project",
+                )
             return {
                 "hash_file": file.hash,
                 "file_size": file.size,
