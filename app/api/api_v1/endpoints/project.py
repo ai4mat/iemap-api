@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import logging
 from models.iemap import FileProject, ProjectFileForm, Property, Publication, fileType
@@ -378,12 +379,32 @@ async def login(
 # ADD FILE TO PROJECT WITH DATA ****USING FORM****
 # http://0.0.0.0:8001/api/v1/project/add_file/62761c48856da47202945e05
 @router.post("/project/add_file/{project_id}", tags=["projects"])
-async def login(
+async def form_add_project_file(
     project_id: ObjectIdStr,
     form_data: ProjectFileForm = Depends(ProjectFileForm.as_form),
     fileupload: UploadFile = File(...),
     db: AsyncIOMotorClient = Depends(get_database),
 ):
+    """Add file to project using Multi-Part Form data
+
+    Args:
+        project_id (ObjectIdStr): document id to add file to
+        form_data (ProjectFileForm): form data fields. Defaults to Depends(ProjectFileForm.as_form).
+        fileupload (UploadFile ): file to upload (as form key use 'fileupload').
+        db (AsyncIOMotorClient ): Motor client connection to MongoDb. Defaults to Depends(get_database).
+
+    Raises:
+        HTTPException: HTTP 500 Internal Server Error if unable to save file
+        HTTPException: HTTP 400 bad request if file was not provided
+
+
+    Returns:
+        dict: {
+            "hash_file"(str): hash file saved on file system,
+            "file_size"(str): file size in human readable format,
+            "file_ext"(str): file extension
+        }
+    """
     if fileupload is not None and fileupload.filename != "":
         if fileupload.content_type not in Config.allowed_mime_types:
             raise HTTPException(400, detail="Invalid document type")
@@ -405,7 +426,7 @@ async def login(
             if form_data.publication_name:
                 file.publication = Publication(
                     name=form_data.publication_name,
-                    date=form_data.publication_date,
+                    date=datetime(form_data.publication_date),
                     url=form_data.publication_url,
                 )
 
@@ -416,8 +437,10 @@ async def login(
                 "file_ext": file.extention,
             }
         else:
-            raise HTTPException(400, detail="Unable to save file")
-    raise HTTPException(400, detail="You must provide a file")
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unable to save file"
+            )
+    raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="You must provide a file")
 
 
 # https://github.com/tiangolo/fastapi/issues/362
