@@ -184,7 +184,7 @@ class Publication(BaseModel):
 
     @validator("date", pre=True, always=True)
     def _set_publication_date_type(cls, date: datetime):
-        result = datetime.strptime(date, "%Y-%M-%d") or date
+        result = datetime.strptime(date, "%Y-%m-%d") or date
         return result
 
 
