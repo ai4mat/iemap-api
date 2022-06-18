@@ -7,7 +7,7 @@ from pathlib import Path
 from math import modf, trunc
 from bson.objectid import ObjectId
 from fastapi.encoders import jsonable_encoder
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException, UploadFile, status
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 from core.parsing import parse_cif
@@ -18,9 +18,16 @@ def create_aliased_response(model: BaseModel) -> JSONResponse:
     return JSONResponse(content=jsonable_encoder(model, by_alias=True))
 
 
-def hash_file(filename):
-    """ "This function returns the SHA-1 hash
-    of the file passed into it"""
+def hash_file(filename: str) -> str:
+    """This function returns the SHA-1 hash
+    of the file passed into it
+
+    Args:
+        filename (str): file full name (including extention) to hash
+
+    Returns:
+        str: SHA-1 hash of the file full name
+    """
 
     # make a hash object
     h = hashlib.sha1()
@@ -39,7 +46,16 @@ def hash_file(filename):
     return h.hexdigest()
 
 
-def truncate(number, digits) -> float:
+def truncate(number: float, digits: int) -> float:
+    """Truncate number to given number of digits
+
+    Args:
+        number (float): number to truncate
+        digits (int): desidered number of digits
+
+    Returns:
+        float: truncated number
+    """
     stepper = 10.0**digits
     return trunc(stepper * number) / stepper
 
@@ -52,8 +68,16 @@ class SIZE_UNIT(enum.Enum):
     GB = 4
 
 
-def convert_unit(size_in_bytes, unit):
-    """Convert the size from bytes to other units like KB, MB or GB"""
+def convert_unit(size_in_bytes: float, unit: SIZE_UNIT) -> float:
+    """Convert the size from bytes to other units like KB, MB or GB
+
+    Args:
+        size_in_bytes (float): file size in bytes
+        unit (SIZE_UNIT): desidered units
+
+    Returns:
+        float: converted size in desidered units
+    """
     if unit == SIZE_UNIT.KB:
         return size_in_bytes / 1024
     elif unit == SIZE_UNIT.MB:
@@ -64,8 +88,16 @@ def convert_unit(size_in_bytes, unit):
         return size_in_bytes
 
 
-def get_str_file_size(file_name, size_type=None):
-    """Get file in size in given unit like KB, MB or GB"""
+def get_str_file_size(file_name: str, size_type: SIZE_UNIT = None) -> str:
+    """Get file in size in given unit like KB, MB or GB
+
+    Args:
+        file_name (str): file full path
+        size_type (SIZE_UNIT, optional): preferred size format (default to None).
+
+    Returns:
+        str: file size in KB, MB or GB
+    """
     size = path.getsize(file_name)
     if size_type:
         size_converted = convert_unit(size, size_type)
@@ -80,7 +112,23 @@ def get_str_file_size(file_name, size_type=None):
 
 
 async def save_file(file: UploadFile, upload_dir: str):
+    """Save file to upload directory
 
+    Args:
+        file (UploadFile): file to save
+        upload_dir (str): base dir where to save file
+
+    Raises:
+        HTTPException: HTTP Error 400 if file is not valid
+        HTTPException: HTTP Error 500 if file cannot be saved
+
+    Returns:
+        dict:{
+            "file_hash" (str): hash of the file saved,
+            "file_size" (str): file size in human readable format,
+            "file_ext" (str): file extension,
+        }
+    """
     if file.content_type not in Config.allowed_mime_types:
         raise HTTPException(400, detail="Invalid document type")
     # retrieve file extension
@@ -104,11 +152,12 @@ async def save_file(file: UploadFile, upload_dir: str):
                 while content := await file.read(1024 * 1024):  # async read chunk
                     await out_file.write(content)  # async write chunk
             file_hash = hash_file(file_to_write)
-            new_file_name = f"{upload_dir}/{file_hash}.{file_ext}"
+            # full path of new file name
+            new_file_name = path.join(base_dir, f"{file_hash}.{file_ext}")
             rename(file_to_write, new_file_name)
         str_file_size = get_str_file_size(new_file_name)
     except Exception as e:
-        raise HTTPException(400, detail=str(e))
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     return file_hash, str_file_size, file_ext
 
 
