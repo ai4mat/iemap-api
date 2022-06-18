@@ -114,3 +114,8 @@
 [Document Your Scientific Project With Markdown, Sphinx, and Read the Docs | PyData Global 2021](https://www.youtube.com/watch?v=qRSb299awB0)  
 [Sphinx, MyST, and Python Docs in 2022 - Talk Python Episode](https://www.youtube.com/watch?v=_Lv_8QWwL8g)
 [Sphinx Themes](https://sphinx-themes.org/)
+
+#### Other
+
+[Pathlib](https://realpython.com/python-pathlib/)
+[Tutorial pathlib](https://zetcode.com/python/pathlib/)
