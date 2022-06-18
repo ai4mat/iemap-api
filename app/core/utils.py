@@ -3,6 +3,7 @@ import hashlib
 import json
 from os import rename, path
 import aiofiles
+from pathlib import Path
 from math import modf, trunc
 from bson.objectid import ObjectId
 from fastapi.encoders import jsonable_encoder
@@ -84,8 +85,16 @@ async def save_file(file: UploadFile, upload_dir: str):
         raise HTTPException(400, detail="Invalid document type")
     # retrieve file extension
     file_ext = file.filename.split(".")[-1]
-    # file to write path
-    file_to_write = f"{upload_dir}/{file.filename}"
+
+    # get directory path for uploaded_dir (abs path)
+    base_dir = Path(path.dirname(path.realpath(__file__))).parent.parent / upload_dir
+
+    # path for file to write on file system
+    file_to_write = path.join(base_dir, file.filename)
+
+    # print(f"{upload_dir}/{file.filename}")
+    # print(file_to_write)
+
     # write file to disk in chunks
     file_hash, str_file_size = None, None
     try:
