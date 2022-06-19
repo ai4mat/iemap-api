@@ -113,7 +113,7 @@ async def add_project_file(
 
     Returns:
     --------
-        modified_count: int - number of modified documents
+        modified_count, matched_cound: (int,int) - number of modified documents, number of matched documents
 
     """
     #  {"_id":ObjectId("62752dd88856514dab27dd8e")},
@@ -135,9 +135,13 @@ async def add_project_file(
             {"$and": [{"elem.name": fileName}, {"elem.extention": fileExt}]}
         ],
     )
-    num_records_updated = result_update.modified_count
+    # if a document already exists, number_matched_documents will be 1
+    num_docs_updated, number_doc_matched = (
+        result_update.modified_count,
+        result_update.matched_count,
+    )
 
-    return num_records_updated
+    return num_docs_updated, number_doc_matched
 
 
 async def find_project_file_by_hash(conn: AsyncIOMotorClient, file_hash: str, id: str):
