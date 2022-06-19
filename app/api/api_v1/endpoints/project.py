@@ -141,19 +141,18 @@ async def show_projects(
     # response_model=ProjectModel,
 )
 async def add_new_project(
+    project: NewProjectModel,
     db: AsyncIOMotorClient = Depends(get_database),
-    project: NewProjectModel = None,
-):
-    """# Add a new project
+) -> dict:
+    """Add new project (metadata)
 
     Args:
-    -----------
-        **NewProjectModel** - the project to add
+        db (AsyncIOMotorClient, optional): Motor client connection to MongoDB. Defaults to Depends(get_database).
+        project (NewProjectModel): project metadata to store on DB. Defaults to None.
 
     Returns:
-    --------
-        **dict** - {"inserted_id": ObjectID} where ObjectID is the document ID inserted in DB
-                    (use this ID as path parameter to add files to project)
+        dict: {"inserted_id": ObjectID} where ObjectID is the document ID inserted in DB
+            (use this ID as path parameter to add files to project)
     """
     # logger.info(f"add_new_project: {project.dict()}")
     # id is a ObjectId
