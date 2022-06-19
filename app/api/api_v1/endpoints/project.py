@@ -165,7 +165,7 @@ async def add_new_project(
 
 # ADD PROJECT FILES
 # REQUIRES PROJECT_ID AND FILE_NAME
-# http://0.0.0.0:8001/api/v1/project/addfile/?project_id=5eb8f8f8f8f8f8f8f8f8f8f8&file=TEST.pdf
+# http://0.0.0.0:8001/api/v1/project/add/file/?project_id=5eb8f8f8f8f8f8f8f8f8f8f8&file=TEST.pdf
 @router.post("/project/add/file/", tags=["projects"])
 async def create_project_file(
     file_name: str,
@@ -199,7 +199,10 @@ async def create_project_file(
     id_mongodb = BsonObjectId(project_id)
     # Check file MimeType
     if file.content_type not in Config.allowed_mime_types:
-        raise HTTPException(400, detail="Invalid document type")
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail="Invalid document type (allowed only PDF,CSV, TXT, CIF or DOC)",
+        )
     # retrieve file extension
     file_ext = file.filename.split(".")[-1]
     # file to write full path
@@ -216,11 +219,12 @@ async def create_project_file(
         structure, distinct_species, lattice = None, None, None
         if file_ext == "cif":
             structure, distinct_species, lattice = parse_cif(file_to_write)
-        # compute file hash  & rename file on FileSystem accordgly    ###########
+        # compute file hash  & rename file on FileSystem accordgly
         hash = hash_file(file_to_write)
-        new_file_name = f"{upload_dir}/{hash}.{file_ext}"
+        new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
+        #  f"{upload_dir}/{hash}.{file_ext}"
         rename(file_to_write, new_file_name)
-        #########################################################################
+
         # get file size
         file_size = get_str_file_size(new_file_name)
 
@@ -228,7 +232,7 @@ async def create_project_file(
         update_modified_count, update_matched_count = await add_project_file(
             db, id_mongodb, hash, file_size, file_ext, file_name.split(".")[0]
         )
-        if update_modified_count == 0 and update_matched_count == 0:
+        if update_modified_count == 0:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Document not updated",
@@ -261,8 +265,9 @@ async def create_property_file(
         db (AsyncIOMotorClient, optional): Motor client connection to MongoDB. Defaults to Depends(get_database).
 
     Raises:
-        HTTPException: HTTP Exception 400 is returned if it was not possible to add the file to the project
-
+        HTTPException: HTTP Error 400 is returned if a file not allowed is uploaded
+        HTTPException: HTTP Error 400 is returned no file is provided
+        HTTPException: HTTP Error 500 is returned if it was not possible to add the file to the project
 
     Returns:
         dict:{
@@ -275,11 +280,13 @@ async def create_property_file(
     id_mongodb = BsonObjectId(project_id)
     # Check file MimeType
     if file.content_type not in Config.allowed_mime_types:
-        raise HTTPException(400, detail="Invalid document type")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid document type")
+    if file.filename == "":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="No file provided")
     # retrieve file extension
     file_ext = file.filename.split(".")[-1]
     # file to write path
-    file_to_write = f"{upload_dir}/{file.filename}"
+    file_to_write = get_dir_uploaded(upload_dir) / file.filename
     # write file to disk in chunks
     with open(file_to_write, "wb+") as file_object:
 
@@ -296,14 +303,17 @@ async def create_property_file(
         # hash = h.hexdigest()
         # file_object.write(file.file.read())
 
-        new_file_name = f"{upload_dir}/{hash}.{file_ext}"
+        new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
         rename(file_to_write, new_file_name)
         str_file_size = get_str_file_size(new_file_name)
         modified_count = await add_property_file(
             db, id_mongodb, hash, str_file_size, file_ext, property_name, property_type
         )
         if modified_count == 0:
-            raise HTTPException(400, detail="Unable to add property file")
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unable to add property file",
+            )
         return {
             "file_name": f"{file.filename}",
             "file_hash": f"{hash}",
