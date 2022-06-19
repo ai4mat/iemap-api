@@ -1,12 +1,13 @@
 from datetime import datetime
 import json
 import logging
+from turtle import up
 from models.iemap import FileProject, ProjectFileForm, Property, Publication, fileType
 import aiofiles
 from typing import Optional
 from bson.objectid import ObjectId as BsonObjectId
 from core.parsing import parse_cif
-from core.utils import get_str_file_size, hash_file, save_file
+from core.utils import get_dir_uploaded, get_str_file_size, hash_file, save_file
 from os import rename, getcwd, path
 from dotenv import dotenv_values, find_dotenv
 from pydantic import Json
@@ -49,6 +50,7 @@ logger = logging.getLogger("ai4mat")
 
 router = APIRouter()
 
+upload_dir = Config.files_dir
 
 # http://0.0.0.0:8001/api/v1/project/list/?page_size=1&page_number=3
 # GET ALL PROJECTS PAGINATED (using skip & limit)
@@ -200,8 +202,9 @@ async def create_project_file(
         raise HTTPException(400, detail="Invalid document type")
     # retrieve file extension
     file_ext = file.filename.split(".")[-1]
-    # file to write path
-    file_to_write = f"{upload_dir}/{file.filename}"
+    # file to write full path
+
+    file_to_write = get_dir_uploaded(upload_dir) / file.filename
     # write file to disk in chunks
     with open(file_to_write, "wb+") as file_object:
 
@@ -222,10 +225,10 @@ async def create_project_file(
         file_size = get_str_file_size(new_file_name)
 
         # add file to docoment in DB having id == project_id
-        update_modified_count = await add_project_file(
+        update_modified_count, update_matched_count = await add_project_file(
             db, id_mongodb, hash, file_size, file_ext, file_name.split(".")[0]
         )
-        if update_modified_count == 0:
+        if update_modified_count == 0 and update_matched_count == 0:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Document not updated",
