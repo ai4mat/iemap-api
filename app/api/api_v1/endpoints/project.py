@@ -155,7 +155,7 @@ async def add_new_project(
         **dict** - {"inserted_id": ObjectID} where ObjectID is the document ID inserted in DB
                     (use this ID as path parameter to add files to project)
     """
-    logger.info(f"add_new_project: {project.dict()}")
+    # logger.info(f"add_new_project: {project.dict()}")
     # id is a ObjectId
     id = await add_project(db, project=project)
     # content=json.dumps(dict(project), default=str)
