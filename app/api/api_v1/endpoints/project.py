@@ -308,16 +308,16 @@ async def create_property_file(
         }
 
 
-@router.get("/files/{name_file}")
-def get_file(name_file: str):
+# @router.get("/files/{name_file}", tags=["projects"])
+# def get_file(name_file: str):
 
-    file_path = f"{getcwd()}/{upload_dir}/{name_file}"
-    isExisting = path.exists(file_path)
-    if isExisting:
-        content = FileResponse(file_path)
-        return content
-    else:
-        return JSONResponse(content={"error": "file not found!"}, status_code=404)
+#     file_path = f"{getcwd()}/{upload_dir}/{name_file}"
+#     isExisting = path.exists(file_path)
+#     if isExisting:
+#         content = FileResponse(file_path)
+#         return content
+#     else:
+#         return JSONResponse(content={"error": "file not found!"}, status_code=404)
 
 
 # http://0.0.0.0:8001/api/v1/project/file/list
@@ -326,26 +326,64 @@ def get_file(name_file: str):
     "/project/file/list/",
     tags=["projects"],
 )
-async def create_property_file(
+async def get_list_process_properties_by_proj_name_and_affiliation(
     affiliation: str,
     projectName: str,
     request: Request,
     db: AsyncIOMotorClient = Depends(get_database),
 ):
-    list_files = await list_project_properties_files(db, affiliation, projectName)
-    for doc in list_files:
-        file_path = doc["file"]["hash"] + "." + doc["file"]["extention"]
-        doc["file"]["url"] = str(request.base_url) + "file/" + file_path
-    return list_files
+    """GET list process properties associated to a project filtered by affiliation and project name
+
+    Args:
+        affiliation (str): affiliation of project's user (TODO:retrieved from JWT)
+        projectName (str): name of project
+        request (Request): _description_
+        db (AsyncIOMotorClient, optional): Motor client connection to MongoDB. Defaults to Depends(get_database).
+
+    Returns:
+        dict: list of properties files associated to a project
+             (if one or more file associated exists an additional "url" field is added within the field "file")
+    """
+    # retrieve a list of process properties from DB (by project name and affiliation)
+    list_doc = await list_project_properties_files(db, affiliation, projectName)
+    # add a field to each document to get a file url to eventually download files
+    for doc in list_doc:
+        file = doc.get("file")
+        if file:
+            file_path = file["hash"] + "." + file["extention"]
+            doc["file"]["url"] = str(request.base_url) + "api/v1/files/" + file_path
+    return list_doc
 
 
-@router.post("/project/add_property_and_file/{project_id}", tags=["projects"])
-async def login(
+# ADD PROPERTY FILE TO PROJECT WITH DATA ****USING FORM****
+# http://0.0.0.0:8001/api/v1/project/add_file_and_property/62761c48856da47202945e05
+@router.post("/project/add_file_and_property/{project_id}", tags=["projects"])
+async def form_add_property_and_file(
     project_id: ObjectIdStr,
     form_data: PropertyForm = Depends(PropertyForm.as_form),
     fileupload: Optional[UploadFile] = File(None),
     db: AsyncIOMotorClient = Depends(get_database),
 ):
+    """Add a new property and file to an existing project
+
+    Args:
+        project_id (ObjectIdStr): id of project to add property file to
+        form_data (PropertyForm, optional): project property
+        fileupload (Optional[UploadFile], optional): File associated to property to upload. Defaults to File(None).
+        db (AsyncIOMotorClient, optional): Motor client connection to MongoDB. Defaults to Depends(get_database).
+
+    Raises:
+        HTTPException: HTTP Error 500 if it was not possible to add the property to the project
+        HTTPException: HTTP Error 500 if it was not possible save the file to project
+
+    Returns:
+        dict:{
+              "modified_count" (int): modified_count,
+                "hash_file" (str , Optional): hash file saved on disk,
+                "file_size" (str, Optional): file size in human readable form,
+                "file_ext"(str, Optional): file extension,
+        }
+    """
     if fileupload is not None:
         file = PropertyFile()
         file.extention = fileupload.filename.split(".")[-1]
@@ -355,21 +393,33 @@ async def login(
         file.hash = file_hash
         file.size = file_size
 
+        # ADD PROPERTY having an associated file TO PROJECT only
+        # if file was saved succefully
         if file_hash:
             modified_count = await add_property(
                 db, project_id, Property(**form_data.dict(), file=file)
             )
+            # SEND RESPONSE to client
             return {
+                "modified_count": modified_count,
                 "hash_file": file.hash,
                 "file_size": file.size,
                 "file_ext": file.extention,
             }
         else:
-            raise HTTPException(400, detail="Unable to save file")
-    modified_count, _ = await add_property(
-        db, project_id, Property(**form_data.dict(), file=None)
-    )
-    return {"modified_count": modified_count}
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unable to save file"
+            )
+    else:
+        # PROPERTY HAS NO FILE ASSOCIATED THEN ADD ONLY PROPERTY TO PROJECT
+        modified_count, _ = await add_property(
+            db, project_id, Property(**form_data.dict(), file=None)
+        )
+        if modified_count == 0:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unable to add property"
+            )
+        return {"modified_count": modified_count}
 
     # f.size = fileupload.size
     # if username == "admin" and password == "admin":
@@ -378,7 +428,7 @@ async def login(
 
 # ADD FILE TO PROJECT WITH DATA ****USING FORM****
 # http://0.0.0.0:8001/api/v1/project/add_file/62761c48856da47202945e05
-@router.post("/project/add_file/{project_id}", tags=["projects"])
+@router.post("/project/add_file_and_data/{project_id}", tags=["projects"])
 async def form_add_project_file(
     project_id: ObjectIdStr,
     form_data: ProjectFileForm = Depends(ProjectFileForm.as_form),
