@@ -168,7 +168,7 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-def get_dir_uploaded(upload_dir: str) -> str:
+def get_dir_uploaded(upload_dir: str) -> Path:
     """Get full path of upload directory
 
     Args:
