@@ -168,4 +168,20 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
+def get_dir_uploaded(upload_dir: str) -> str:
+    """Get full path of upload directory
+
+    Args:
+        upload_dir (str): directory name where to save file
+
+    Returns:
+        str: full path of upload directory
+    """
+    return (
+        Path.cwd().parent / upload_dir
+        if "app" in str(Path.cwd()).split("/")
+        else Path.cwd() / upload_dir
+    )
+
+
 # https://www.programiz.com/python-programming/examples/hash-file
