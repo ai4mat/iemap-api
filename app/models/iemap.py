@@ -109,8 +109,8 @@ class Material(BaseModel):
     formula: str
     elements: List[Union[str, str]]
     chemicalComposition: List[ChemicalCompositionItem]
-    input: Input
-    output: Output
+    input: Optional[Input]
+    output: Optional[Output]
 
 
 class Axis(BaseModel):
