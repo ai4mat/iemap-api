@@ -1,11 +1,13 @@
+from datetime import datetime
 import json
 import logging
+from turtle import up
 from models.iemap import FileProject, ProjectFileForm, Property, Publication, fileType
 import aiofiles
 from typing import Optional
 from bson.objectid import ObjectId as BsonObjectId
 from core.parsing import parse_cif
-from core.utils import get_str_file_size, hash_file, save_file
+from core.utils import get_dir_uploaded, get_str_file_size, hash_file, save_file
 from os import rename, getcwd, path
 from dotenv import dotenv_values, find_dotenv
 from pydantic import Json
@@ -48,6 +50,7 @@ logger = logging.getLogger("ai4mat")
 
 router = APIRouter()
 
+upload_dir = Config.files_dir
 
 # http://0.0.0.0:8001/api/v1/project/list/?page_size=1&page_number=3
 # GET ALL PROJECTS PAGINATED (using skip & limit)
@@ -138,21 +141,20 @@ async def show_projects(
     # response_model=ProjectModel,
 )
 async def add_new_project(
+    project: NewProjectModel,
     db: AsyncIOMotorClient = Depends(get_database),
-    project: NewProjectModel = None,
-):
-    """# Add a new project
+) -> dict:
+    """Add new project (metadata)
 
     Args:
-    -----------
-        **NewProjectModel** - the project to add
+        db (AsyncIOMotorClient, optional): Motor client connection to MongoDB. Defaults to Depends(get_database).
+        project (NewProjectModel): project metadata to store on DB. Defaults to None.
 
     Returns:
-    --------
-        **dict** - {"inserted_id": ObjectID} where ObjectID is the document ID inserted in DB
-                    (use this ID as path parameter to add files to project)
+        dict: {"inserted_id": ObjectID} where ObjectID is the document ID inserted in DB
+            (use this ID as path parameter to add files to project)
     """
-    logger.info(f"add_new_project: {project.dict()}")
+    # logger.info(f"add_new_project: {project.dict()}")
     # id is a ObjectId
     id = await add_project(db, project=project)
     # content=json.dumps(dict(project), default=str)
@@ -162,7 +164,7 @@ async def add_new_project(
 
 # ADD PROJECT FILES
 # REQUIRES PROJECT_ID AND FILE_NAME
-# http://0.0.0.0:8001/api/v1/project/addfile/?project_id=5eb8f8f8f8f8f8f8f8f8f8f8&file=TEST.pdf
+# http://0.0.0.0:8001/api/v1/project/add/file/?project_id=5eb8f8f8f8f8f8f8f8f8f8f8&file=TEST.pdf
 @router.post("/project/add/file/", tags=["projects"])
 async def create_project_file(
     file_name: str,
@@ -196,11 +198,15 @@ async def create_project_file(
     id_mongodb = BsonObjectId(project_id)
     # Check file MimeType
     if file.content_type not in Config.allowed_mime_types:
-        raise HTTPException(400, detail="Invalid document type")
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail="Invalid document type (allowed only PDF,CSV, TXT, CIF or DOC)",
+        )
     # retrieve file extension
     file_ext = file.filename.split(".")[-1]
-    # file to write path
-    file_to_write = f"{upload_dir}/{file.filename}"
+    # file to write full path
+
+    file_to_write = get_dir_uploaded(upload_dir) / file.filename
     # write file to disk in chunks
     with open(file_to_write, "wb+") as file_object:
 
@@ -212,16 +218,17 @@ async def create_project_file(
         structure, distinct_species, lattice = None, None, None
         if file_ext == "cif":
             structure, distinct_species, lattice = parse_cif(file_to_write)
-        # compute file hash  & rename file on FileSystem accordgly    ###########
+        # compute file hash  & rename file on FileSystem accordgly
         hash = hash_file(file_to_write)
-        new_file_name = f"{upload_dir}/{hash}.{file_ext}"
+        new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
+        #  f"{upload_dir}/{hash}.{file_ext}"
         rename(file_to_write, new_file_name)
-        #########################################################################
+
         # get file size
         file_size = get_str_file_size(new_file_name)
 
         # add file to docoment in DB having id == project_id
-        update_modified_count = await add_project_file(
+        update_modified_count, update_matched_count = await add_project_file(
             db, id_mongodb, hash, file_size, file_ext, file_name.split(".")[0]
         )
         if update_modified_count == 0:
@@ -257,8 +264,9 @@ async def create_property_file(
         db (AsyncIOMotorClient, optional): Motor client connection to MongoDB. Defaults to Depends(get_database).
 
     Raises:
-        HTTPException: HTTP Exception 400 is returned if it was not possible to add the file to the project
-
+        HTTPException: HTTP Error 400 is returned if a file not allowed is uploaded
+        HTTPException: HTTP Error 400 is returned no file is provided
+        HTTPException: HTTP Error 500 is returned if it was not possible to add the file to the project
 
     Returns:
         dict:{
@@ -271,11 +279,13 @@ async def create_property_file(
     id_mongodb = BsonObjectId(project_id)
     # Check file MimeType
     if file.content_type not in Config.allowed_mime_types:
-        raise HTTPException(400, detail="Invalid document type")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid document type")
+    if file.filename == "":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="No file provided")
     # retrieve file extension
     file_ext = file.filename.split(".")[-1]
     # file to write path
-    file_to_write = f"{upload_dir}/{file.filename}"
+    file_to_write = get_dir_uploaded(upload_dir) / file.filename
     # write file to disk in chunks
     with open(file_to_write, "wb+") as file_object:
 
@@ -292,14 +302,17 @@ async def create_property_file(
         # hash = h.hexdigest()
         # file_object.write(file.file.read())
 
-        new_file_name = f"{upload_dir}/{hash}.{file_ext}"
+        new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
         rename(file_to_write, new_file_name)
         str_file_size = get_str_file_size(new_file_name)
         modified_count = await add_property_file(
             db, id_mongodb, hash, str_file_size, file_ext, property_name, property_type
         )
         if modified_count == 0:
-            raise HTTPException(400, detail="Unable to add property file")
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unable to add property file",
+            )
         return {
             "file_name": f"{file.filename}",
             "file_hash": f"{hash}",
@@ -307,16 +320,16 @@ async def create_property_file(
         }
 
 
-@router.get("/files/{name_file}")
-def get_file(name_file: str):
+# @router.get("/files/{name_file}", tags=["projects"])
+# def get_file(name_file: str):
 
-    file_path = f"{getcwd()}/{upload_dir}/{name_file}"
-    isExisting = path.exists(file_path)
-    if isExisting:
-        content = FileResponse(file_path)
-        return content
-    else:
-        return JSONResponse(content={"error": "file not found!"}, status_code=404)
+#     file_path = f"{getcwd()}/{upload_dir}/{name_file}"
+#     isExisting = path.exists(file_path)
+#     if isExisting:
+#         content = FileResponse(file_path)
+#         return content
+#     else:
+#         return JSONResponse(content={"error": "file not found!"}, status_code=404)
 
 
 # http://0.0.0.0:8001/api/v1/project/file/list
@@ -325,26 +338,64 @@ def get_file(name_file: str):
     "/project/file/list/",
     tags=["projects"],
 )
-async def create_property_file(
+async def get_list_process_properties_by_proj_name_and_affiliation(
     affiliation: str,
     projectName: str,
     request: Request,
     db: AsyncIOMotorClient = Depends(get_database),
 ):
-    list_files = await list_project_properties_files(db, affiliation, projectName)
-    for doc in list_files:
-        file_path = doc["file"]["hash"] + "." + doc["file"]["extention"]
-        doc["file"]["url"] = str(request.base_url) + "file/" + file_path
-    return list_files
+    """GET list process properties associated to a project filtered by affiliation and project name
+
+    Args:
+        affiliation (str): affiliation of project's user (TODO:retrieved from JWT)
+        projectName (str): name of project
+        request (Request): _description_
+        db (AsyncIOMotorClient, optional): Motor client connection to MongoDB. Defaults to Depends(get_database).
+
+    Returns:
+        dict: list of properties files associated to a project
+             (if one or more file associated exists an additional "url" field is added within the field "file")
+    """
+    # retrieve a list of process properties from DB (by project name and affiliation)
+    list_doc = await list_project_properties_files(db, affiliation, projectName)
+    # add a field to each document to get a file url to eventually download files
+    for doc in list_doc:
+        file = doc.get("file")
+        if file:
+            file_path = file["hash"] + "." + file["extention"]
+            doc["file"]["url"] = str(request.base_url) + "api/v1/files/" + file_path
+    return list_doc
 
 
-@router.post("/project/add_property_and_file/{project_id}", tags=["projects"])
-async def login(
+# ADD PROPERTY FILE TO PROJECT WITH DATA ****USING FORM****
+# http://0.0.0.0:8001/api/v1/project/add_file_and_property/62761c48856da47202945e05
+@router.post("/project/add_file_and_property/{project_id}", tags=["projects"])
+async def form_add_property_and_file(
     project_id: ObjectIdStr,
     form_data: PropertyForm = Depends(PropertyForm.as_form),
     fileupload: Optional[UploadFile] = File(None),
     db: AsyncIOMotorClient = Depends(get_database),
 ):
+    """Add a new property and file to an existing project
+
+    Args:
+        project_id (ObjectIdStr): id of project to add property file to
+        form_data (PropertyForm, optional): project property
+        fileupload (Optional[UploadFile], optional): File associated to property to upload. Defaults to File(None).
+        db (AsyncIOMotorClient, optional): Motor client connection to MongoDB. Defaults to Depends(get_database).
+
+    Raises:
+        HTTPException: HTTP Error 500 if it was not possible to add the property to the project
+        HTTPException: HTTP Error 500 if it was not possible save the file to project
+
+    Returns:
+        dict:{
+              "modified_count" (int): modified_count,
+                "hash_file" (str , Optional): hash file saved on disk,
+                "file_size" (str, Optional): file size in human readable form,
+                "file_ext"(str, Optional): file extension,
+        }
+    """
     if fileupload is not None:
         file = PropertyFile()
         file.extention = fileupload.filename.split(".")[-1]
@@ -354,21 +405,33 @@ async def login(
         file.hash = file_hash
         file.size = file_size
 
+        # ADD PROPERTY having an associated file TO PROJECT only
+        # if file was saved succefully
         if file_hash:
             modified_count = await add_property(
                 db, project_id, Property(**form_data.dict(), file=file)
             )
+            # SEND RESPONSE to client
             return {
+                "modified_count": modified_count,
                 "hash_file": file.hash,
                 "file_size": file.size,
                 "file_ext": file.extention,
             }
         else:
-            raise HTTPException(400, detail="Unable to save file")
-    modified_count, _ = await add_property(
-        db, project_id, Property(**form_data.dict(), file=None)
-    )
-    return {"modified_count": modified_count}
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unable to save file"
+            )
+    else:
+        # PROPERTY HAS NO FILE ASSOCIATED THEN ADD ONLY PROPERTY TO PROJECT
+        modified_count, _ = await add_property(
+            db, project_id, Property(**form_data.dict(), file=None)
+        )
+        if modified_count == 0:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unable to add property"
+            )
+        return {"modified_count": modified_count}
 
     # f.size = fileupload.size
     # if username == "admin" and password == "admin":
@@ -377,13 +440,33 @@ async def login(
 
 # ADD FILE TO PROJECT WITH DATA ****USING FORM****
 # http://0.0.0.0:8001/api/v1/project/add_file/62761c48856da47202945e05
-@router.post("/project/add_file/{project_id}", tags=["projects"])
-async def login(
+@router.post("/project/add_file_and_data/{project_id}", tags=["projects"])
+async def form_add_project_file(
     project_id: ObjectIdStr,
     form_data: ProjectFileForm = Depends(ProjectFileForm.as_form),
     fileupload: UploadFile = File(...),
     db: AsyncIOMotorClient = Depends(get_database),
 ):
+    """Add file to project using Multi-Part Form data
+
+    Args:
+        project_id (ObjectIdStr): document id to add file to
+        form_data (ProjectFileForm): form data fields. Defaults to Depends(ProjectFileForm.as_form).
+        fileupload (UploadFile ): file to upload (as form key use 'fileupload').
+        db (AsyncIOMotorClient ): Motor client connection to MongoDb. Defaults to Depends(get_database).
+
+    Raises:
+        HTTPException: HTTP 500 Internal Server Error if unable to save file
+        HTTPException: HTTP 400 bad request if file was not provided
+
+
+    Returns:
+        dict: {
+            "hash_file"(str): hash file saved on file system,
+            "file_size"(str): file size in human readable format,
+            "file_ext"(str): file extension
+        }
+    """
     if fileupload is not None and fileupload.filename != "":
         if fileupload.content_type not in Config.allowed_mime_types:
             raise HTTPException(400, detail="Invalid document type")
@@ -405,19 +488,28 @@ async def login(
             if form_data.publication_name:
                 file.publication = Publication(
                     name=form_data.publication_name,
-                    date=form_data.publication_date,
+                    date=form_data.publication_date,  # date conversion is done in Publication class
                     url=form_data.publication_url,
                 )
 
-            result = await add_project_file_and_data(db, project_id, file)
+            n_modified, n_matched = await add_project_file_and_data(
+                db, project_id, file
+            )
+            if n_modified == 0:
+                raise HTTPException(
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Unable to add file to project",
+                )
             return {
                 "hash_file": file.hash,
                 "file_size": file.size,
                 "file_ext": file.extention,
             }
         else:
-            raise HTTPException(400, detail="Unable to save file")
-    raise HTTPException(400, detail="You must provide a file")
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unable to save file"
+            )
+    raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="You must provide a file")
 
 
 # https://github.com/tiangolo/fastapi/issues/362

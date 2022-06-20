@@ -1,10 +1,11 @@
 import hashlib
-from core.utils import hash_file
+from pathlib import Path
+from core.utils import get_dir_uploaded, hash_file
 from os import getcwd, remove, rename, path
 from dotenv import dotenv_values, find_dotenv
 
 # import json
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, status
 from fastapi.responses import JSONResponse, FileResponse
 
 # import aiofiles
@@ -71,15 +72,33 @@ async def create_upload_file(file: UploadFile = File(...)):
 
 
 @router.get("/files/{name_file}")
-def get_file(name_file: str):
+def get_file(name_file: str) -> FileResponse:
+    """Download file from server
 
-    file_path = f"{getcwd()}/{upload_dir}/{name_file}"
-    isExisting = path.exists(file_path)
+    Args:
+        name_file (str): file name to download expressed as <hash>.<ext>
+
+    Raises:
+        HTTPException: HTTP Error 404 if file not found
+
+    Returns:
+        FileResponse: binary stream of file
+    """
+    # get directory path for uploaded_dir
+    # if app is in path then use parent (remove 'app' from path) dir and concat with uploaded_dir
+    # if app in NOT in path the is not necessary to get parent dir
+    base_dir = get_dir_uploaded(upload_dir)
+
+    # path for file to write on file system
+    file_path = base_dir / name_file
+
+    # print(file_path)
+    isExisting = file_path.is_file()
     if isExisting:
         content = FileResponse(file_path)
         return content
     else:
-        return JSONResponse(content={"error": "file not found!"}, status_code=404)
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="File not found")
 
 
 @router.delete("/files/delete/{name_file}")
