@@ -1,7 +1,6 @@
 from datetime import datetime
 import json
 import logging
-from turtle import up
 from models.iemap import FileProject, ProjectFileForm, Property, Publication, fileType
 import aiofiles
 from typing import Optional
