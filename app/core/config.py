@@ -28,7 +28,7 @@ path_dot_env = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../.en
 config = {
     **os.environ,
 }
-if path_dot_env:
+if os.path.exists(path_dot_env):
     # override loaded values with environment variables from .env file
     config = {
         **dotenv_values(path_dot_env),
