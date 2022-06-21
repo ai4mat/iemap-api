@@ -23,7 +23,7 @@ allowed_mime_types = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]
 
-path_dot_env = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../.env")
+path_dot_env = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../.env")
 # load environment variables
 config = {
     **os.environ,
