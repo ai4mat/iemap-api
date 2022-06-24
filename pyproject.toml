@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "mi-api"
+name = "iemap-api"
 version = "0.1.0"
 description = "REST API for Mission Innovation AI4MAT"
 authors = ["SergioEanX <sergio.ferlito@enea.it>"]
