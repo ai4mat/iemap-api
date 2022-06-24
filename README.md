@@ -281,5 +281,5 @@ If all is working properly, you'll get this output:
 ## Credits
 
 - Sergio Ferlito ([sergio.ferlito@enea.it](sergio.ferlito@enea.it)) for the development and optimization of the API.
-- Marco Puccini ([marco.puccini@enea.it](marco.puccini@enea.it)) for the initial idea, the first implementation and the DevOps ativities.
+- Marco Puccini ([marco.puccini@enea.it](marco.puccini@enea.it)) for the initial idea, the first implementation and the DevOps activities.
 - Claudio Ronchetti ([claudio.ronchetti@enea.it](claudio.ronchetti@enea.it)) for data model and general support.
