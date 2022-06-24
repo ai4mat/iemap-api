@@ -1,7 +1,7 @@
 # IEMAP RESTful/GraphQL API
-![GitHub](https://img.shields.io/github/license/ai4mat/mi-api)
-![GitHub release](https://img.shields.io/github/v/release/ai4mat/mi-api?sort=semver)
-![GitHub top language](https://img.shields.io/github/languages/top/ai4mat/mi-api)
+![GitHub](https://img.shields.io/github/license/ai4mat/iemap-api)
+![GitHub release](https://img.shields.io/github/v/release/ai4mat/iemap-api?sort=semver)
+![GitHub top language](https://img.shields.io/github/languages/top/ai4mat/iemap-api)
 ![Website](https://img.shields.io/website?down_color=red&down_message=offline&up_color=green&up_message=online&url=https%3A%2F%2Fai4mat.enea.it%2Fdocs)
 ![Security Headers](https://img.shields.io/security-headers?url=https%3A%2F%2Fai4mat.enea.it)
 ![Mozilla HTTP Observatory Grade](https://img.shields.io/mozilla-observatory/grade-score/ai4mat.enea.it?publish)
@@ -41,13 +41,13 @@ All files related to the application are in the `app` directory into the followi
 First of all you need to get the code:
 
 ```
-git clone https://github.com/ai4mat/mi-api.git
+git clone https://github.com/ai4mat/iemap-api.git
 ```
 
 and jump to its folder:
 
 ```bash
-cd mi-api
+cd iemap-api
 ```
 
 ### Make some configurations
