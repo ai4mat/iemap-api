@@ -117,5 +117,6 @@
 
 #### Other
 
-[Pathlib](https://realpython.com/python-pathlib/)
-[Tutorial pathlib](https://zetcode.com/python/pathlib/)
+[Pathlib](https://realpython.com/python-pathlib/)  
+[Tutorial pathlib](https://zetcode.com/python/pathlib/)  
+[Send email](https://realpython.com/python-send-email/)
