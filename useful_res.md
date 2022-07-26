@@ -119,4 +119,5 @@
 
 [Pathlib](https://realpython.com/python-pathlib/)  
 [Tutorial pathlib](https://zetcode.com/python/pathlib/)  
-[Send email](https://realpython.com/python-send-email/)
+[Send email](https://realpython.com/python-send-email/)  
+[How to send a progress of operation in a FastAPI app?](https://stackoverflow.com/questions/64901945/how-to-send-a-progress-of-operation-in-a-fastapi-app)
