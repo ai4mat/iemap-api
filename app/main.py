@@ -45,7 +45,7 @@ dictConfig(logging_config)
 app = FastAPI(
     title="Mission Innovation IEMAP API",
     description="RESTful/GraphQL API for Mission Innovation - IEMAP stored data",
-    version="1.1.0",
+    version="1.1.1",
     terms_of_service="",
     contact={
         "name": "IEMAP API info",
@@ -62,7 +62,7 @@ app.add_middleware(SentryAsgiMiddleware)
 #     try:
 #         return await call_next(request)
 #     except Exception:
-#         # you probably want some kind of logging here
+#         # you probably want some kind of logging here195f4160af4f
 #         return Response(
 #             content={"Watch out!!"},
 #             media_type="application/json",

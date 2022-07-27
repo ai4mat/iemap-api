@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "mi-api"
-version = "0.1.0"
-description = "REST API for Mission Innovation AI4MAT"
+name = "iemap-api"
+version = "1.1.1"
+description = "REST API for Mission Innovation IEMAP portal"
 authors = ["SergioEanX <sergio.ferlito@enea.it>"]
 license = "MIT"
 
