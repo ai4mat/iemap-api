@@ -120,4 +120,5 @@
 [Pathlib](https://realpython.com/python-pathlib/)  
 [Tutorial pathlib](https://zetcode.com/python/pathlib/)  
 [Send email](https://realpython.com/python-send-email/)  
-[How to send a progress of operation in a FastAPI app?](https://stackoverflow.com/questions/64901945/how-to-send-a-progress-of-operation-in-a-fastapi-app)
+[How to send a progress of operation in a FastAPI app?](https://stackoverflow.com/questions/64901945/how-to-send-a-progress-of-operation-in-a-fastapi-app)  
+[How to Set Up a Task Queue with Celery and RabbitMQ](https://www.linode.com/docs/guides/task-queue-celery-rabbitmq/)
