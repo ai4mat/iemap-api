@@ -121,4 +121,5 @@
 [Tutorial pathlib](https://zetcode.com/python/pathlib/)  
 [Send email](https://realpython.com/python-send-email/)  
 [How to send a progress of operation in a FastAPI app?](https://stackoverflow.com/questions/64901945/how-to-send-a-progress-of-operation-in-a-fastapi-app)  
-[How to Set Up a Task Queue with Celery and RabbitMQ](https://www.linode.com/docs/guides/task-queue-celery-rabbitmq/)
+[How to Set Up a Task Queue with Celery and RabbitMQ](https://www.linode.com/docs/guides/task-queue-celery-rabbitmq/)  
+[Serving ML Models in Production with FastAPI and Celery](https://towardsdatascience.com/deploying-ml-models-in-production-with-fastapi-and-celery-7063e539a5db)
