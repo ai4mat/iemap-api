@@ -10,8 +10,8 @@ from fastapi_users.authentication import (
     CookieTransport,
 )
 from fastapi_users.db import BeanieUserDatabase, ObjectIDIDMixin
-
 from db.mongodb_utils import UserAuth, get_user_db
+from core.smtp_email import Email
 
 SECRET = "2cc29249a2602c779e08c0b9cac8ecf8694159decbc0698b"
 
@@ -29,11 +29,23 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
     async def on_after_forgot_password(
         self, user: UserAuth, token: str, request: Optional[Request] = None
     ):
+
         print(f"User {user.id} has forgot their password. Reset token: {token}")
+        em = Email()
+        em.send_verify_email([user.email], token)
 
     async def on_after_request_verify(
         self, user: UserAuth, token: str, request: Optional[Request] = None
     ):
+        # retrieve requested url to use for link to embend in email sent to user
+        strBaseRequest = str(request.url).split("auth/request-verify-token")[0]
+        strEndpointVerifyByEmail = "auth/verify-email/"
+        em = Email()
+        # send email to user to verify his/her email
+        # eventually add other email to list to notify an administrator
+        em.send_verify_email(
+            [user.email], strBaseRequest + strEndpointVerifyByEmail, token
+        )
         print(f"Verification requested for user {user.id}. Verification token: {token}")
 
 
