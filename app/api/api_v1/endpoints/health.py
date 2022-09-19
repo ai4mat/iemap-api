@@ -4,9 +4,10 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
 from db.mongodb_utils import UserAuth
-from models.users import (
-    current_active_user,
-)
+
+# from models.users import (
+#     current_active_user,
+# )
 
 # from core.jwt import get_current_user_authorizer
 from core.auth import JWTBearer, signJWT, decodeJWT
@@ -14,8 +15,18 @@ from models.user import UserBase, User
 from crud.health import checkDB
 from db.mongodb import AsyncIOMotorClient, get_database
 
+# Use fastapi_users instance as Dependence Injection into routes
+# to protect as show in
+# https://fastapi-users.github.io/fastapi-users/10.1/usage/current-user/
+
+from models.users import (
+    fastapi_users,
+)
+
 router = APIRouter()
 
+# Get the current user (active or not)¶
+current_user = fastapi_users.current_user()
 
 # UserAuth is the Beanie Model for storing user credentials
 @router.get(
@@ -25,7 +36,12 @@ router = APIRouter()
     summary="Check if the on-premise auth service is up and running",
     description="Pass a JWT using Beared in Header or using an HTTPonly Cookie",
 )
-async def check_on_premise_auth(user: UserAuth = Depends(current_active_user)):
+# IF NO TOKEN IS PROVIDED IN HEADER AS BEARER OR TOKEN NOT VALID
+# THEN RETURNS
+# {
+#     "detail": "Unauthorized"
+# }
+async def check_on_premise_auth(user: UserAuth = Depends(current_user)):
     return {"message": f"{user.email} ({user.affiliation}) you are welcome!"}
 
 
