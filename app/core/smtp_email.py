@@ -6,7 +6,7 @@ from datetime import date, datetime
 ## email.mime subclasses
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
+from core.config import Config
 
 # Connect to the Gmail SMTP server and Send Email
 context = ssl.SSLContext(ssl.PROTOCOL_TLS)
@@ -23,9 +23,8 @@ class Email:
     # Convert it as a string
     email_text = email_message.as_string()
     email_message["Subject"] = f"Activate your account"
-    email_from = "noreply@mission-innovation.it"
-    password = "Zbd29662"
-    list_to_email = ["sergio.ferlito@enea.it"]  # "marco.puccini@enea.it",
+    email_from = Config.smtp_from
+    password = Config.smtp_pwd
     email_message["From"] = email_from
 
     # defining constructor
@@ -33,7 +32,7 @@ class Email:
         pass
 
     def send(self, list_to_email):
-        with smtplib.SMTP("smtp.office365.com", 587) as server:
+        with smtplib.SMTP(Config.smtp_server, 587) as server:
             server.starttls()
             server.login(self.email_from, self.password)
             server.sendmail(
