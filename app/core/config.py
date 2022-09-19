@@ -54,3 +54,7 @@ class Config(object):
     files_dir = config["FILESDIR"]
     allowed_mime_types = allowed_mime_types
     enable_onpremise_auth = bool(config["ENABLE_ONPREMISE_AUTH"] == "True")
+    secrete_on_premise_auth = config["SECRET_ONPREMISE_AUTH"]
+    smtp_server = config["SMTP_SERVER"]
+    smtp_pwd = config["SMTP_PWD"]
+    smtp_from = config["SMTP_FROM"]
