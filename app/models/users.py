@@ -12,8 +12,9 @@ from fastapi_users.authentication import (
 from fastapi_users.db import BeanieUserDatabase, ObjectIDIDMixin
 from db.mongodb_utils import UserAuth, get_user_db
 from core.smtp_email import Email
+from core.config import Config
 
-SECRET = "2cc29249a2602c779e08c0b9cac8ecf8694159decbc0698b"
+SECRET = Config.secrete_on_premise_auth
 
 
 class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
