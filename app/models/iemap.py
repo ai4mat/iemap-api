@@ -243,7 +243,7 @@ class newProject(BaseModel):
     updatedAt: Annotated[
         datetime, Field(default_factory=lambda: datetime.now().utcnow())
     ]
-    user: User
+    user: Optional[User]
     project: Project
     projectWP: str
     process: Process
