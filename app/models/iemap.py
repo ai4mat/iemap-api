@@ -5,6 +5,7 @@
 from __future__ import annotations
 from datetime import date, datetime
 from enum import Enum
+
 from bson.objectid import ObjectId
 
 from typing import Annotated, List, Union, Optional, Type
@@ -13,6 +14,8 @@ import json
 from pydantic import BaseModel, Field, validator
 from pydantic.class_validators import root_validator
 from fastapi import Form
+from uuid import uuid4
+from re import findall
 
 
 class ObjectIdStr(str):
@@ -29,28 +32,33 @@ class ObjectIdStr(str):
         return str(v)
 
 
+# class iemap_id:
+#     _iemap_id: Optional[str] = "iemap-" + uuid4().hex[:6].upper()
+
+
 class UpdatedAt(BaseModel):
     _date: Optional[str] = datetime.now().utcnow()
 
 
-class User(BaseModel):
-    email: str
-    affiliation: str
+class Provenance(BaseModel):
+    email: Optional[str]  # email retrieved from JWT
+    affiliation: Optional[str]  # affiliation retrieved from JWT
+    identifier: Optional[str]
 
 
 class Project(BaseModel):
     name: str
-    description: str
     label: str
+    description: Optional[str]
 
 
 class Parameter(BaseModel):
     name: str
-    type: str
-    value: float
+    # type: str
+    value: Union[float, str]
 
 
-class SwAgent(BaseModel):
+class Agent(BaseModel):
     name: str
     version: str
 
@@ -60,14 +68,14 @@ class Calculation(BaseModel):
     swAgent: SwAgent
 
 
-class SwAgent1(BaseModel):
+class SwAgent(BaseModel):
     name: str
     version: str
 
 
 class Experiment(BaseModel):
     method: str
-    swAgent: SwAgent1
+    swAgent: SwAgent
 
 
 class ChemicalCompositionItem(BaseModel):
@@ -84,33 +92,32 @@ class Lattice(BaseModel):
     gamma: str
 
 
-class Input(BaseModel):
+class InputMaterial(BaseModel):
     lattice: Lattice
     sites: str
     species: str
 
 
-class Lattice1(BaseModel):
-    a: str
-    b: str
-    c: str
-    alpha: str
-    beta: str
-    gamma: str
-
-
-class Output(BaseModel):
-    lattice: Lattice1
+class OutputMaterial(BaseModel):
+    lattice: Lattice
     sites: str
     species: str
 
 
 class Material(BaseModel):
     formula: str
-    elements: List[Union[str, str]]
-    chemicalComposition: List[ChemicalCompositionItem]
-    input: Optional[Input]
-    output: Optional[Output]
+    elements: Optional[List[str]]  # List[Union[str, str]]
+    input: Optional[InputMaterial]
+    output: Optional[OutputMaterial]
+
+    @validator("elements", always=True)
+    def composite_name(cls, v, values, **kwargs):
+        elements = [
+            x
+            for x in findall("[A-Z][a-z]?|[0-9]+", values["formula"])
+            if not x.isnumeric()
+        ]
+        return elements
 
 
 class Axis(BaseModel):
@@ -132,38 +139,38 @@ class UpdatedAt1(BaseModel):
 
 
 class PropertyFile(BaseModel):
-    name: str = Field(default="")
-    hash: Optional[str]
-    extention: Optional[str]
-    size: Optional[str]
-    createdAt: Annotated[
-        datetime, Field(default_factory=lambda: datetime.now().utcnow())
-    ]
-    updatedAt: Annotated[
-        datetime, Field(default_factory=lambda: datetime.now().utcnow())
-    ]
+    fullpath: str
+    # hash: Optional[str]
+    # extention: Optional[str]
+    # size: Optional[str]
+    # createdAt: Annotated[
+    #     datetime, Field(default_factory=lambda: datetime.now().utcnow())
+    # ]
+    # updatedAt: Annotated[
+    #     datetime, Field(default_factory=lambda: datetime.now().utcnow())
+    # ]
 
 
 class Property(BaseModel):
     name: str
-    type: str
+    # type: str
     # axis: Axis
-    value: float
+    value: Union[float, str]
     # units: Units
     file: Optional[PropertyFile]
-    isCalculated: bool
-    isPhysical: bool
+    # isCalculated: bool
+    # isPhysical: bool
 
 
 class Process(BaseModel):
     isExperiment: bool
-    isSimulation: bool
-    parameters: List[Parameter]
-    calculation: Calculation
-    experiment: Experiment
-    material: Material
-    properties: List[Property]
-    iemapID: str
+    method: str
+    agent: Optional[Agent]
+    # parameters: List[Parameter]
+    # calculation: Calculation
+    # experiment: Experiment
+    # material: Material
+    # properties: List[Property]
 
 
 class CreatedAt2(BaseModel):
@@ -174,18 +181,18 @@ class UpdatedAt2(BaseModel):
     _date: str = Field(..., alias="$date")
 
 
-class Publication(BaseModel):
-    name: str
-    date: datetime
-    url: Optional[str]
+# class Publication(BaseModel):
+#     name: str
+#     date: datetime
+#     url: Optional[str]
 
-    class Config:
-        validate_assignment = True
+#     class Config:
+#         validate_assignment = True
 
-    @validator("date", pre=True, always=True)
-    def _set_publication_date_type(cls, date: datetime):
-        result = datetime.strptime(date, "%Y-%m-%d") or date
-        return result
+#     @validator("date", pre=True, always=True)
+#     def _set_publication_date_type(cls, date: datetime):
+#         result = datetime.strptime(date, "%Y-%m-%d") or date
+#         return result
 
 
 class fileType(Enum):
@@ -222,7 +229,7 @@ class FileProject(BaseModel):
     updatedAt: Annotated[
         datetime, Field(default_factory=lambda: datetime.now().utcnow())
     ]
-    publication: Optional[Publication]
+    # publication: Optional[Publication]
 
     class Config:
         use_enum_values = True
@@ -243,15 +250,19 @@ class newProject(BaseModel):
     updatedAt: Annotated[
         datetime, Field(default_factory=lambda: datetime.now().utcnow())
     ]
-    user: Optional[User]
+    iemap_id: Optional[str] = "iemap-" + uuid4().hex[:6].upper()
+    provenance: Optional[Provenance]
     project: Project
-    projectWP: str
     process: Process
+    material: Material
+    parameters: List[Parameter]
+    properties: List[Property]
     files: Optional[List[FileProject]] = None
     _v: Optional[str] = Field(default="1_0")
 
     class Config:
         validate_assignment = True
+        arbitrary_types_allowed = True
 
 
 # def as_form(cls: Type[BaseModel]):
@@ -349,3 +360,128 @@ class ProjectFileForm(BaseModel):
 
 # https://stackoverflow.com/questions/63616798/pydantic-how-to-pass-the-default-value-to-a-variable-if-none-was-passed
 # https://github.com/samuelcolvin/pydantic/issues/1593
+
+if __name__ == "__main__":
+    # data = Material(formula="C6H12O6")  # , elements=["C", "H", "O"])
+    p = Process.parse_obj(
+        {
+            "isExperiment": True,
+            "method": "PCA",
+            "agent": {"name": "expresso", "version": "1.05"},
+        }
+    )
+    i = InputMaterial.parse_obj(
+        {
+            "lattice": {
+                "a": "11.050",
+                "b": "10365",
+                "c": "5.635",
+                "alpha": "81.59",
+                "beta": "68.114",
+                "gamma": "30296",
+            },
+            "sites": "[ [x1,y1,z1], [x2, y2, z2], [x3, y3, z3] ]",
+            "species": "[H,H,H]",
+        }
+    )
+    o = OutputMaterial.parse_obj(
+        {
+            "lattice": {
+                "a": "11.050",
+                "b": "10365",
+                "c": "5.635",
+                "alpha": "81.59",
+                "beta": "68.114",
+                "gamma": "30296",
+            },
+            "sites": "[ [x1,y1,z1], [x2, y2, z2], [x3, y3, z3] ]",
+            "species": "[H,H,H]",
+        }
+    )
+    m = Material.parse_obj(
+        {
+            "formula": "C6H12O6",
+            "input": {
+                "lattice": {
+                    "a": "11.050",
+                    "b": "10365",
+                    "c": "5.635",
+                    "alpha": "81.59",
+                    "beta": "68.114",
+                    "gamma": "30296",
+                },
+                "sites": "[ [x1,y1,z1], [x2, y2, z2], [x3, y3, z3] ]",
+                "species": "[H,H,H]",
+            },
+        }
+    )
+    par1 = Parameter.parse_obj({"name": "temperature", "value": 25.7})
+    par2 = Parameter.parse_obj({"name": "type-crystal", "value": "type1"})
+
+    prop = Property.parse_obj({"name": "property1", "value": "value1"})
+    prov = Provenance.parse_obj({"email": "iemap_user@enea.it", "affiliation": "enea"})
+    proj = Project.parse_obj({"name": "Battery-LiOn", "label": "PB"})
+
+    newP = newProject(
+        provenance=prov,
+        material=m,
+        project=proj,
+        process=p,
+        properties=[prop],
+        parameters=[par1, par2],
+    )
+
+    data = newProject.parse_obj(
+        {
+            "provenance": {"email": "iemap_user@enea.it", "affiliation": "enea"},
+            "project": {"name": "Battery-LiOn", "label": "PB"},
+            "process": {
+                "isExperiment": True,
+                "method": "PCA",
+                "agent": {"name": "expresso", "version": "1.05"},
+            },
+            "material": {
+                "formula": "C6H12O6",
+                "input": {
+                    "lattice": {
+                        "a": "11.050",
+                        "b": "10365",
+                        "c": "5.635",
+                        "alpha": "81.59",
+                        "beta": "68.114",
+                        "gamma": "30296",
+                    },
+                    "sites": "[ [x1,y1,z1], [x2, y2, z2], [x3, y3, z3] ]",
+                    "species": "[H,H,H]",
+                },
+                "output": {
+                    "lattice": {
+                        "a": "11.050",
+                        "b": "10365",
+                        "c": "5.635",
+                        "alpha": "81.59",
+                        "beta": "68.114",
+                        "gamma": "30296",
+                    },
+                    "sites": "[ [x1,y1,z1], [x2, y2, z2], [x3, y3, z3] ]",
+                    "species": "[H,H,H]",
+                },
+            },
+            "parameters": [
+                {"name": "temperature", "value": 25.7},
+                {"name": "type-crystal", "value": "type1"},
+            ],
+            "properties": [
+                {"name": "property1", "value": "value1"},
+                {"name": "numeric_pro", "value": 22.58},
+            ],
+        }
+    )
+    print(m)
+    print(i)
+    print(o)
+    print(p)
+    print(par1)
+    print(par2)
+    print(prop)
+    print(json.dumps(json.loads(data.json()), indent=4))
