@@ -63,7 +63,7 @@ cookie_transport = CookieTransport(cookie_httponly=True, cookie_secure=False)
 
 # DEFINE JWT STRATEGY
 def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+    return JWTStrategy(secret=SECRET, lifetime_seconds=Config.jwt_lifetime)
 
 
 # DEFINE TWO AUTHENTICATION BACKEND
