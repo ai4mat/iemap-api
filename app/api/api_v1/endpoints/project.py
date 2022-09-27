@@ -20,8 +20,14 @@ from fastapi import (
     HTTPException,
     Request,
 )
-from fastapi.responses import JSONResponse, FileResponse
+
+# from fastapi.responses import JSONResponse, FileResponse
 from db.mongodb import AsyncIOMotorClient, get_database
+
+# NECESSARY TO HANDLE FASTAPI_USERS
+from db.mongodb_utils import UserAuth
+from models.users import fastapi_users
+
 from crud.projects import (
     add_project,
     add_project_file,
@@ -38,6 +44,7 @@ from models.iemap import (
     PropertyForm,
     newProject as NewProjectModel,
     ObjectIdStr,
+    User,
 )
 
 from core.config import Config
@@ -46,10 +53,12 @@ upload_dir = Config.files_dir
 
 logger = logging.getLogger("ai4mat")
 
-
 router = APIRouter()
 
 upload_dir = Config.files_dir
+
+# Get the current user (active or not)¶
+current_user = fastapi_users.current_user(verified=True)
 
 # http://0.0.0.0:8001/api/v1/project/list/?page_size=1&page_number=3
 # GET ALL PROJECTS PAGINATED (using skip & limit)
@@ -142,6 +151,9 @@ async def show_projects(
 async def add_new_project(
     project: NewProjectModel,
     db: AsyncIOMotorClient = Depends(get_database),
+    user: UserAuth = Depends(
+        current_user  # COMMENT THIS TO REMOVE AUTHORIZATION ~~~~~~~~~~~~~~~
+    ),
 ) -> dict:
     """Add new project (metadata)
 
@@ -155,6 +167,9 @@ async def add_new_project(
     """
     # logger.info(f"add_new_project: {project.dict()}")
     # id is a ObjectId
+
+    # RETRIEVE USER DATA FROM JWT
+    project.user = User(email=user.email, affiliation=user.affiliation)
     id = await add_project(db, project=project)
     # content=json.dumps(dict(project), default=str)
     # JSONResponse(content=json.dumps(dict(project), default=str))
