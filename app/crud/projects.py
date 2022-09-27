@@ -89,14 +89,7 @@ async def add_property_file(
     return result_update.modified_count
 
 
-async def add_project_file(
-    conn: AsyncIOMotorClient,
-    id: str,
-    fileHash: str,
-    fileSize: str,
-    fileExt: str,
-    fileName: str,
-):
+async def add_project_file(conn: AsyncIOMotorClient, id: str, fp: FileProject):
     """# Function to add file to PROJECT
     (using filne name hash and original extention)
     The document to update is identified by the mdocuent's id, and file's name and extention.
@@ -105,10 +98,7 @@ async def add_project_file(
     -----------
         conn: AsyncIOMotorClient - Motor MongoDB client connection
         id: str - MongoDB document's id (ObjectId) to update
-        fileHash: str - file hash
-        fileSize: str - file size
-        fileExt: str - file extention
-        fileName: str - file name
+        fp: FileProject
 
     Returns:
     --------
@@ -120,26 +110,36 @@ async def add_project_file(
 
     coll = conn[database_name][ai4mat_collection_name]
 
-    result_update = await coll.update_one(
-        {"_id": ObjectId(id)},
-        {
-            "$set": {
-                "files.$[elem].hash": fileHash,
-                "files.$[elem].size": fileSize,
-                "files.$[elem].extention": fileExt,
-            }
-        },
-        upsert=False,
-        array_filters=[
-            {"$and": [{"elem.name": fileName}, {"elem.extention": fileExt}]}
-        ],
-    )
-    # if a document already exists, number_matched_documents will be 1
+    # first check if field exist and is not null
+    # if exist than Add element to array, otherwise create array field with one element
+    filesExists = await coll.find_one({"_id": ObjectId(id), "files": {"$ne": None}})
+    result_update = None
+    if filesExists:
+        result_update = await coll.update_one(
+            {"_id": ObjectId(id)},
+            {
+                "$set": {
+                    "files.$[elem].hash": fp.hash,
+                    "files.$[elem].size": fp.size,
+                    "files.$[elem].extention": fp.extention,
+                }
+            },
+            upsert=False,
+            array_filters=[
+                {"$and": [{"elem.name": fp.name}, {"elem.extention": fp.extention}]}
+            ],
+        )
+        # if a document already exists, number_matched_documents will be 1
+
+    else:
+        result_update = await coll.update_one(
+            {"_id": ObjectId(id)}, {"$push": {"files": fp.dict()}}
+        )
+
     num_docs_updated, number_doc_matched = (
         result_update.modified_count,
         result_update.matched_count,
     )
-
     return num_docs_updated, number_doc_matched
 
 
