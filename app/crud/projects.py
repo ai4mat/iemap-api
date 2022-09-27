@@ -113,28 +113,28 @@ async def add_project_file(conn: AsyncIOMotorClient, id: str, fp: FileProject):
     # first check if field exist and is not null
     # if exist than Add element to array, otherwise create array field with one element
     filesExists = await coll.find_one({"_id": ObjectId(id), "files": {"$ne": None}})
-    result_update = None
-    if filesExists:
-        result_update = await coll.update_one(
-            {"_id": ObjectId(id)},
-            {
-                "$set": {
-                    "files.$[elem].hash": fp.hash,
-                    "files.$[elem].size": fp.size,
-                    "files.$[elem].extention": fp.extention,
-                }
-            },
-            upsert=False,
-            array_filters=[
-                {"$and": [{"elem.name": fp.name}, {"elem.extention": fp.extention}]}
-            ],
-        )
-        # if a document already exists, number_matched_documents will be 1
+    # result_update = None
+    # if filesExists:
+    #     result_update = await coll.update_one(
+    #         {"_id": ObjectId(id)},
+    #         {
+    #             "$set": {
+    #                 "files.$[elem].hash": fp.hash,
+    #                 "files.$[elem].size": fp.size,
+    #                 "files.$[elem].extention": fp.extention,
+    #             }
+    #         },
+    #         upsert=False,
+    #         array_filters=[
+    #             {"$and": [{"elem.name": fp.name}, {"elem.extention": fp.extention}]}
+    #         ],
+    #     )
+    # if a document already exists, number_matched_documents will be 1
 
-    else:
-        result_update = await coll.update_one(
-            {"_id": ObjectId(id)}, {"$push": {"files": fp.dict()}}
-        )
+    # if not filesExists:
+    result_update = await coll.update_one(
+        {"_id": ObjectId(id)}, {"$push": {"files": fp.dict()}}
+    )
 
     num_docs_updated, number_doc_matched = (
         result_update.modified_count,
