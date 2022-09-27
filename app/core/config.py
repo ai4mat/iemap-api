@@ -47,6 +47,7 @@ class Config(object):
     jwt_secret_key = config["JWT_SECRET_KEY"]
     jwt_algorithm = config["JWT_ALGORITHM"]
     jwt_token_prefix = "Token"
+    jwt_lifetime = int(config["JWT_LIFETIME"]) if config.get("JWT_LIFETIME") else 3600
     access_token_expire_minutes = 60 * 24 * 7  # one week
     app_name = config["APP_NAME"]
     allowed_hosts = CommaSeparatedStrings(config.get("ALLOWED_HOSTS", "*"))
