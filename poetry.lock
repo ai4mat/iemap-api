@@ -25,7 +25,7 @@ trio = ["trio (>=0.16)"]
 
 [[package]]
 name = "ariadne"
-version = "0.16.0"
+version = "0.16.1"
 description = "Ariadne is a Python library for implementing GraphQL servers."
 category = "main"
 optional = false
@@ -72,7 +72,7 @@ typecheck = ["mypy"]
 
 [[package]]
 name = "beanie"
-version = "1.11.9"
+version = "1.11.11"
 description = "Asynchronous Python ODM for MongoDB"
 category = "main"
 optional = false
@@ -109,7 +109,7 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "certifi"
-version = "2022.9.14"
+version = "2022.9.24"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
 optional = false
@@ -244,6 +244,25 @@ dnspython = ">=1.15.0"
 idna = ">=2.0.0"
 
 [[package]]
+name = "emmet-core"
+version = "0.36.1"
+description = "Core Emmet Library"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+monty = ">=2021.3,<2023.0"
+pybtex = ">=0.24,<1.0"
+pydantic = "1.10.2"
+pymatgen = ">=2021.3,<2023.0"
+spglib = "<3.0.0"
+typing-extensions = ">=3.7,<5.0"
+
+[package.extras]
+all = ["robocrys (>=0.2.7)", "pymatgen-analysis-diffusion (>=2022.1.15)", "pymatgen-analysis-alloys (>=0.0.3)"]
+
+[[package]]
 name = "fastapi"
 version = "0.83.0"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
@@ -302,7 +321,7 @@ dev = ["asgi-lifespan", "httpx", "bumpversion", "flit", "asynctest", "pytest-moc
 
 [[package]]
 name = "fonttools"
-version = "4.37.2"
+version = "4.37.3"
 description = "Tools to manipulate font files"
 category = "main"
 optional = false
@@ -332,7 +351,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "graphql-core"
-version = "3.2.1"
+version = "3.2.3"
 description = "GraphQL implementation for Python, a port of GraphQL.js, the JavaScript reference implementation for GraphQL."
 category = "main"
 optional = false
@@ -460,6 +479,25 @@ pymongo = ">=3.12,<4"
 encryption = ["pymongo[encryption] (>=3.12,<4)"]
 
 [[package]]
+name = "mp-api"
+version = "0.27.3"
+description = "API Server for the Materials Project"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+emmet-core = ">=0.35.3"
+monty = ">=2021.3.12"
+msgpack = "*"
+pymatgen = ">=2022.3.7"
+requests = ">=2.23.0"
+typing-extensions = ">=3.7.4.1"
+
+[package.extras]
+all = ["emmet-core[all] (>=0.35.3custodian)", "mpcontribs-client", "boto3"]
+
+[[package]]
 name = "mpmath"
 version = "1.2.1"
 description = "Python library for arbitrary-precision floating-point arithmetic"
@@ -470,6 +508,14 @@ python-versions = "*"
 [package.extras]
 develop = ["pytest (>=4.6)", "pycodestyle", "pytest-cov", "codecov", "wheel"]
 tests = ["pytest (>=4.6)"]
+
+[[package]]
+name = "msgpack"
+version = "1.0.4"
+description = "MessagePack serializer"
+category = "main"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "multidict"
@@ -531,7 +577,7 @@ python-versions = "*"
 
 [[package]]
 name = "pandas"
-version = "1.4.4"
+version = "1.5.0"
 description = "Powerful data structures for data analysis, time series, and statistics"
 category = "main"
 optional = false
@@ -539,16 +585,14 @@ python-versions = ">=3.8"
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.18.5", markers = "platform_machine != \"aarch64\" and platform_machine != \"arm64\" and python_version < \"3.10\""},
-    {version = ">=1.19.2", markers = "platform_machine == \"aarch64\" and python_version < \"3.10\""},
-    {version = ">=1.20.0", markers = "platform_machine == \"arm64\" and python_version < \"3.10\""},
     {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
+    {version = ">=1.20.3", markers = "python_version < \"3.10\""},
 ]
 python-dateutil = ">=2.8.1"
 pytz = ">=2020.1"
 
 [package.extras]
-test = ["hypothesis (>=5.5.3)", "pytest (>=6.0)", "pytest-xdist (>=1.31)"]
+test = ["pytest-xdist (>=1.31)", "pytest (>=6.0)", "hypothesis (>=5.5.3)"]
 
 [[package]]
 name = "passlib"
@@ -668,7 +712,7 @@ tests = ["pytest (>=6.0.0,<7.0.0)", "coverage[toml] (==5.0.4)"]
 
 [[package]]
 name = "pymatgen"
-version = "2022.9.8"
+version = "2022.9.21"
 description = "Python Materials Genomics is a robust materials analysis code that defines core object representations for structures and molecules with support for many electronic structure codes. It is currently the core analysis code powering the Materials Project (https://materialsproject.org)."
 category = "main"
 optional = false
@@ -677,6 +721,7 @@ python-versions = ">=3.8"
 [package.dependencies]
 matplotlib = ">=1.5"
 monty = ">=3.0.2"
+mp-api = ">=0.27.3"
 networkx = ">=2.2"
 numpy = ">=1.20.1"
 palettable = ">=3.1.1"
@@ -830,7 +875,7 @@ numpy = ">=1.16.5"
 
 [[package]]
 name = "sentry-sdk"
-version = "1.9.8"
+version = "1.9.9"
 description = "Python client for Sentry (https://sentry.io)"
 category = "main"
 optional = false
@@ -946,7 +991,7 @@ widechars = ["wcwidth"]
 
 [[package]]
 name = "tenacity"
-version = "8.0.1"
+version = "8.1.0"
 description = "Retry code until it succeeds"
 category = "main"
 optional = false
@@ -1130,6 +1175,7 @@ email-validator = [
     {file = "email_validator-1.2.1-py2.py3-none-any.whl", hash = "sha256:c8589e691cf73eb99eed8d10ce0e9cbb05a0886ba920c8bcb7c82873f4c5789c"},
     {file = "email_validator-1.2.1.tar.gz", hash = "sha256:6757aea012d40516357c0ac2b1a4c31219ab2f899d26831334c5d069e8b6c3d8"},
 ]
+emmet-core = []
 fastapi = []
 fastapi-users = []
 fastapi-users-db-beanie = []
@@ -1230,10 +1276,12 @@ motor = [
     {file = "motor-2.5.1-py3-none-any.whl", hash = "sha256:961fdceacaae2c7236c939166f66415be81be8bbb762da528386738de3a0f509"},
     {file = "motor-2.5.1.tar.gz", hash = "sha256:663473f4498f955d35db7b6f25651cb165514c247136f368b84419cb7635f6b8"},
 ]
+mp-api = []
 mpmath = [
     {file = "mpmath-1.2.1-py3-none-any.whl", hash = "sha256:604bc21bd22d2322a177c73bdb573994ef76e62edd595d17e00aff24b0667e5c"},
     {file = "mpmath-1.2.1.tar.gz", hash = "sha256:79ffb45cf9f4b101a807595bcb3e72e0396202e0b1d25d689134b48c4216a81a"},
 ]
+msgpack = []
 multidict = [
     {file = "multidict-6.0.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:0b9e95a740109c6047602f4db4da9949e6c5945cefbad34a1299775ddc9a62e2"},
     {file = "multidict-6.0.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:ac0e27844758d7177989ce406acc6a83c16ed4524ebc363c1f748cba184d89d3"},
@@ -1565,10 +1613,7 @@ starlette = [
 ]
 sympy = []
 tabulate = []
-tenacity = [
-    {file = "tenacity-8.0.1-py3-none-any.whl", hash = "sha256:f78f4ea81b0fabc06728c11dc2a8c01277bfc5181b321a4770471902e3eb844a"},
-    {file = "tenacity-8.0.1.tar.gz", hash = "sha256:43242a20e3e73291a28bcbcacfd6e000b02d3857a9a9fff56b297a27afdc932f"},
-]
+tenacity = []
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
