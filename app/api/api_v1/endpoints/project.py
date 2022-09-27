@@ -181,13 +181,15 @@ async def add_new_project(
 
 # ADD PROJECT FILES
 # REQUIRES PROJECT_ID AND FILE_NAME
-# http://0.0.0.0:8001/api/v1/project/add/file/?project_id=5eb8f8f8f8f8f8f8f8f8f8f8&file=TEST.pdf
+# http://0.0.0.0:8001/api/v1/project/add/file/?project_id=5eb8f8f8f8f8f8f8f8f8f8f8&file_name=TEST.pdf
 @router.post("/project/add/file/", tags=["projects"])
 async def create_project_file(
     file_name: str,
     project_id: ObjectIdStr,
     file: UploadFile = File(...),
     db: AsyncIOMotorClient = Depends(get_database),
+    # COMMENT user:...below TO REMOVE AUTHORIZATION ~~~~~~~~~~~~~~~
+    user: UserAuth = Depends(current_user),
 ):
     """Add a new file to an existing project
 
@@ -244,9 +246,12 @@ async def create_project_file(
         # get file size
         file_size = get_str_file_size(new_file_name)
 
+        fp = FileProject(
+            hash=hash, name=file_name.split(".")[0], extention=file_ext, size=file_size
+        )
         # add file to docoment in DB having id == project_id
         update_modified_count, update_matched_count = await add_project_file(
-            db, id_mongodb, hash, file_size, file_ext, file_name.split(".")[0]
+            db, id_mongodb, fp
         )
         if update_modified_count == 0:
             raise HTTPException(
