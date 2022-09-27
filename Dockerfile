@@ -24,11 +24,11 @@ EXPOSE 80
 
 # Creates a non-root user with an explicit UID and adds permission to access the /app folder
 # For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN addgroup --gid ${GID} ${UNAME} && \
+RUN bash -c 'if [[ ${ostype} == Linux ]] ; then addgroup --gid ${GID} ${UNAME} && \
     adduser --uid ${UID} --gid ${GID} --disabled-password --gecos "" ${UNAME} && \
     chown -R ${UID}:${GID} /app && \
     mkdir -p /data && \
-    chown -R ${UID}:${GID} /data
+    chown -R ${UID}:${GID} /data; fi'
 USER ${UNAME}
 
 CMD ["uvicorn", "main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]

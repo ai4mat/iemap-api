@@ -1,7 +1,5 @@
-from datetime import datetime
-import json
 import logging
-from models.iemap import FileProject, ProjectFileForm, Property, Publication, fileType
+
 import aiofiles
 from typing import Optional
 from bson.objectid import ObjectId as BsonObjectId
@@ -20,8 +18,14 @@ from fastapi import (
     HTTPException,
     Request,
 )
-from fastapi.responses import JSONResponse, FileResponse
+
+# from fastapi.responses import JSONResponse, FileResponse
 from db.mongodb import AsyncIOMotorClient, get_database
+
+# NECESSARY TO HANDLE FASTAPI_USERS
+from db.mongodb_utils import UserAuth
+from models.users import fastapi_users
+
 from crud.projects import (
     add_project,
     add_project_file,
@@ -37,8 +41,17 @@ from models.iemap import (
     PropertyFile,
     PropertyForm,
     newProject as NewProjectModel,
+    newProjectResponse,
+    # PydanticObjectId,
     ObjectIdStr,
+    Provenance,
+    FileProject,
+    ProjectFileForm,
+    Property,
+    fileType,
+    newProjectResponse,
 )
+
 
 from core.config import Config
 
@@ -46,10 +59,12 @@ upload_dir = Config.files_dir
 
 logger = logging.getLogger("ai4mat")
 
-
 router = APIRouter()
 
 upload_dir = Config.files_dir
+
+# Get the current user (active or not)¶
+current_user = fastapi_users.current_user(verified=True)
 
 # http://0.0.0.0:8001/api/v1/project/list/?page_size=1&page_number=3
 # GET ALL PROJECTS PAGINATED (using skip & limit)
@@ -133,16 +148,16 @@ async def show_projects(
 
 
 # http://0.0.0.0:8001/api/v1/project/add
-@router.post(
-    "/project/add",
-    tags=["projects"],
-    status_code=status.HTTP_200_OK,
-    # response_model=ProjectModel,
-)
+@router.post("/project/add", tags=["projects"], status_code=status.HTTP_200_OK)
 async def add_new_project(
     project: NewProjectModel,
     db: AsyncIOMotorClient = Depends(get_database),
-) -> dict:
+    # COMMENT user:...below TO REMOVE AUTHORIZATION ~~~~~~~~~~~~~~~
+    # IF USER ACCOUNT IS NOT VERIFIED IT RETURNS FORBIDDEN ~~~~~~~~~~~~~~~~
+    # Options defined in current_user RULE how authentication works, see below
+    # https://fastapi-users.github.io/fastapi-users/10.1/usage/current-user/?h=verified#get-the-current-active-and-verified-user
+    user: UserAuth = Depends(current_user),
+) -> newProjectResponse:
     """Add new project (metadata)
 
     Args:
@@ -155,10 +170,13 @@ async def add_new_project(
     """
     # logger.info(f"add_new_project: {project.dict()}")
     # id is a ObjectId
+
+    # RETRIEVE USER DATA FROM JWT
+    project.provenance = Provenance(email=user.email, affiliation=user.affiliation)
     id = await add_project(db, project=project)
     # content=json.dumps(dict(project), default=str)
     # JSONResponse(content=json.dumps(dict(project), default=str))
-    return {"inserted_id": str(id)}
+    return newProjectResponse(inserted_id=id)
 
 
 # ADD PROJECT FILES
