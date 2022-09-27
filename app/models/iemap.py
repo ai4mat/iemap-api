@@ -162,11 +162,11 @@ class fileType(Enum):
 
 class FileProject(BaseModel):
     hash: Optional[str]
-    description: str
+    # description: str
     name: str
     extention: str
-    type: fileType
-    isProcessed: bool
+    # type: fileType
+    # isProcessed: bool
     size: Optional[str]
     createdAt: Annotated[
         datetime, Field(default_factory=lambda: datetime.now().utcnow())
@@ -195,7 +195,7 @@ class newProject(BaseModel):
     material: Material
     parameters: List[Parameter]
     properties: List[Property]
-    files: Optional[List[FileProject]] = None
+    # files: Optional[List[FileProject]] = None
     _v: Optional[str] = Field(default="1_0")
 
     class Config:
