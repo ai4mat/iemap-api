@@ -1,7 +1,5 @@
-from datetime import datetime
-import json
 import logging
-from models.iemap import FileProject, ProjectFileForm, Property, Publication, fileType
+
 import aiofiles
 from typing import Optional
 from bson.objectid import ObjectId as BsonObjectId
@@ -43,9 +41,17 @@ from models.iemap import (
     PropertyFile,
     PropertyForm,
     newProject as NewProjectModel,
+    newProjectResponse,
+    # PydanticObjectId,
     ObjectIdStr,
-    User,
+    Provenance,
+    FileProject,
+    ProjectFileForm,
+    Property,
+    fileType,
+    newProjectResponse,
 )
+
 
 from core.config import Config
 
@@ -142,19 +148,16 @@ async def show_projects(
 
 
 # http://0.0.0.0:8001/api/v1/project/add
-@router.post(
-    "/project/add",
-    tags=["projects"],
-    status_code=status.HTTP_200_OK,
-    # response_model=ProjectModel,
-)
+@router.post("/project/add", tags=["projects"], status_code=status.HTTP_200_OK)
 async def add_new_project(
     project: NewProjectModel,
     db: AsyncIOMotorClient = Depends(get_database),
-    user: UserAuth = Depends(
-        current_user  # COMMENT THIS TO REMOVE AUTHORIZATION ~~~~~~~~~~~~~~~
-    ),
-) -> dict:
+    # COMMENT user:...below TO REMOVE AUTHORIZATION ~~~~~~~~~~~~~~~
+    # IF USER ACCOUNT IS NOT VERIFIED IT RETURNS FORBIDDEN ~~~~~~~~~~~~~~~~
+    # Options defined in current_user RULE how authentication works, see below
+    # https://fastapi-users.github.io/fastapi-users/10.1/usage/current-user/?h=verified#get-the-current-active-and-verified-user
+    user: UserAuth = Depends(current_user),
+) -> newProjectResponse:
     """Add new project (metadata)
 
     Args:
@@ -169,11 +172,11 @@ async def add_new_project(
     # id is a ObjectId
 
     # RETRIEVE USER DATA FROM JWT
-    project.user = User(email=user.email, affiliation=user.affiliation)
+    project.provenance = Provenance(email=user.email, affiliation=user.affiliation)
     id = await add_project(db, project=project)
     # content=json.dumps(dict(project), default=str)
     # JSONResponse(content=json.dumps(dict(project), default=str))
-    return {"inserted_id": str(id)}
+    return newProjectResponse(inserted_id=id)
 
 
 # ADD PROJECT FILES
