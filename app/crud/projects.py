@@ -1,11 +1,10 @@
-import json
-from models.iemap import FileProject, ProjectFileForm, Property
-from pickle import FALSE
+from models.iemap import FileProject, Property
+
 from db.mongodb import AsyncIOMotorClient
 from bson.objectid import ObjectId
 from core.config import Config
-from core.utils import JSONEncoder
-from models.iemap import ObjectIdStr, Project as IEMAPModel
+
+from models.iemap import Project as IEMAPModel
 from crud.pipelines import get_properties_files
 
 database_name, ai4mat_collection_name = (Config.mongo_db, Config.mongo_coll)
