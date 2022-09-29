@@ -7,7 +7,7 @@ from bson.objectid import ObjectId as BsonObjectId
 from typing import Annotated, List, Union, Optional, Type
 import inspect
 import json
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, SecretStr, Field, validator, create_model
 from pydantic.class_validators import root_validator
 from fastapi import Form
 from uuid import uuid4
@@ -206,6 +206,35 @@ class newProject(BaseModel):
 class newProjectResponse(BaseModel):
     inserted_id: PydanticObjectId
 
+
+class Parameters(Parameter):
+    files: Optional[List[FileProject]]
+
+
+class Properties(Property):
+    file: Optional[str]
+
+
+class ProvenanceNoEmail(Provenance):
+    email: Optional[SecretStr]
+
+
+class ProjectQueryResult(BaseModel):
+    identifier: Optional[str]
+    iemap_id: Optional[str]
+    provenance: Optional[ProvenanceNoEmail]
+    project: Optional[Project]
+    process: Optional[Process]
+    material: Optional[Material]
+    parameters: Optional[List[Parameters]]
+    properties: Optional[List[Properties]]
+    files: Optional[List[FileProject]]
+
+
+# Put your query arguments in this dict
+query_params = {"id": (str, None), "field": (str, "all")}
+
+queryModel = create_model("Query", **query_params)
 
 # def as_form(cls: Type[BaseModel]):
 #     new_parameters = []
