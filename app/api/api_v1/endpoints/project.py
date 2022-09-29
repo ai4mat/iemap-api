@@ -55,7 +55,6 @@ from models.iemap import (
 
 from core.config import Config
 
-upload_dir = Config.files_dir
 
 logger = logging.getLogger("ai4mat")
 
@@ -179,13 +178,13 @@ async def add_new_project(
     return newProjectResponse(inserted_id=id)
 
 
-# ADD PROJECT FILES
+# ADD PROJECT FILE
 # REQUIRES PROJECT_ID AND FILE_NAME
 # http://0.0.0.0:8001/api/v1/project/add/file/?project_id=5eb8f8f8f8f8f8f8f8f8f8f8&file_name=TEST.pdf
 @router.post("/project/add/file/", tags=["projects"])
 async def create_project_file(
-    file_name: str,
     project_id: ObjectIdStr,
+    file_name: Optional[str] = None,
     file: UploadFile = File(...),
     db: AsyncIOMotorClient = Depends(get_database),
     # COMMENT user:...below TO REMOVE AUTHORIZATION ~~~~~~~~~~~~~~~
@@ -219,7 +218,7 @@ async def create_project_file(
     if file.content_type not in Config.allowed_mime_types:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
-            detail="Invalid document type (allowed only PDF,CSV, TXT, CIF or DOC)",
+            detail="Invalid document type (allowed only PDF,CSV, XLS, XLSX, TXT, CIF or DOC)",
         )
     # retrieve file extension
     file_ext = file.filename.split(".")[-1]
@@ -247,7 +246,12 @@ async def create_project_file(
         file_size = get_str_file_size(new_file_name)
 
         fp = FileProject(
-            hash=hash, name=file_name.split(".")[0], extention=file_ext, size=file_size
+            hash=hash,
+            # if file_name is not passed as property in url endpoint then save file name in DB
+            # as the name of uploaded file
+            name=file_name.split(".")[0] if file_name else file.filename,
+            extention=file_ext,
+            size=file_size,
         )
         # add file to docoment in DB having id == project_id
         update_modified_count, update_matched_count = await add_project_file(
@@ -267,14 +271,15 @@ async def create_project_file(
 
 # ADD PROPERTY FILE TO PROJECT
 # REQUIRES PROJECT ID, PROPERTY NAME AND PROPERTY TYPE
-# http://0.0.0.0:8001/api/v1/project/add/file/?project_id=62752dd88856514dab27dd8e&property_name=H2o&property_type=2D
-@router.post("/project/add/propertyfile/", tags=["projects"])
+# http://0.0.0.0:8001/api/v1/project/add/propertyfile/?project_id=62752dd88856514dab27dd8e&name=temperature
+@router.post("/project/add/file_property/", tags=["projects"])
 async def create_property_file(
     project_id: ObjectIdStr,
-    property_name: str,
-    property_type: str,
+    name: str,
     file: UploadFile = File(...),
     db: AsyncIOMotorClient = Depends(get_database),
+    # COMMENT user:...below TO REMOVE AUTHORIZATION ~~~~~~~~~~~~~~~
+    user: UserAuth = Depends(current_user),
 ):
     """Add a new property file to an existing project
 
@@ -327,9 +332,16 @@ async def create_property_file(
         new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
         rename(file_to_write, new_file_name)
         str_file_size = get_str_file_size(new_file_name)
-        modified_count = await add_property_file(
-            db, id_mongodb, hash, str_file_size, file_ext, property_name, property_type
+
+        fp = FileProject(
+            hash=hash,
+            # if file_name is not passed as property in url endpoint then save file name in DB
+            # as the name of uploaded file
+            name=name.split(".")[0] if name else file.filename,
+            extention=file_ext,
+            size=str_file_size,
         )
+        modified_count = await add_property_file(db, id_mongodb, fp, name)
         if modified_count == 0:
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,

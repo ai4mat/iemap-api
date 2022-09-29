@@ -21,6 +21,8 @@ allowed_mime_types = [
     "text/plain",
     "chemical/x-cif",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]
 
 path_dot_env = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../.env")

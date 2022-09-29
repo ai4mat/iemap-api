@@ -58,11 +58,8 @@ async def list_project_properties_files(
 async def add_property_file(
     conn: AsyncIOMotorClient,
     id: str,
-    fileHash: str,
-    strFileSize: str,
-    strFileExt: str,
+    fp: FileProject,
     elementName: str,
-    elementType: str,
 ):
     """Function to add file hash to a property file.
     The document to update is identified by the document's id, and the property file's name.
@@ -72,21 +69,22 @@ async def add_property_file(
 
     coll = conn[database_name][ai4mat_collection_name]
 
-    result_update = await coll.update_one(
+    result_update_property = await coll.update_one(
         {"_id": ObjectId(id)},
         {
             "$set": {
-                "process.properties.$[elem].file.hash": fileHash,
-                "process.properties.$[elem].file.size": strFileSize,
-                "process.properties.$[elem].file.extention": strFileExt,
+                "properties.$[elem].file": fp.hash + "." + fp.extention,
             }
         },
         upsert=False,
-        array_filters=[
-            {"$and": [{"elem.name": elementName}, {"elem.type": elementType}]}
-        ],
+        array_filters=[{"$and": [{"elem.name": elementName}]}],
     )
-    return result_update.modified_count
+    if result_update_property.modified_count == 1:
+        result_update = await coll.update_one(
+            {"_id": ObjectId(id)}, {"$push": {"files": fp.dict()}}
+        )
+
+    return result_update_property.modified_count, result_update_property.matched_count
 
 
 async def add_project_file(conn: AsyncIOMotorClient, id: str, fp: FileProject):
@@ -112,7 +110,7 @@ async def add_project_file(conn: AsyncIOMotorClient, id: str, fp: FileProject):
 
     # first check if field exist and is not null
     # if exist than Add element to array, otherwise create array field with one element
-    filesExists = await coll.find_one({"_id": ObjectId(id), "files": {"$ne": None}})
+    # filesExists = await coll.find_one({"_id": ObjectId(id), "files": {"$ne": None}})
     # result_update = None
     # if filesExists:
     #     result_update = await coll.update_one(
