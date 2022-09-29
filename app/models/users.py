@@ -25,7 +25,16 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
         self, user: UserAuth, request: Optional[Request] = None
     ):
         # await user.update({"$set": {"is_active": False}})
-        print(f"User {user.id} has registered.")
+        # print(f"User {user.id} has registered.")
+        # retrieve requested url to use for link to embend in email sent to user
+        strBaseRequest = str(request.url).split("auth/request-verify-token")[0]
+        strEndpointVerifyByEmail = "auth/verify-email/"
+        em = Email()
+        # send email to user to verify his/her email
+        # eventually add other email to list to notify an administrator
+        em.send_verify_email(
+            [user.email], strBaseRequest + strEndpointVerifyByEmail, token
+        )
 
     async def on_after_forgot_password(
         self, user: UserAuth, token: str, request: Optional[Request] = None
@@ -47,7 +56,7 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
         em.send_verify_email(
             [user.email], strBaseRequest + strEndpointVerifyByEmail, token
         )
-        print(f"Verification requested for user {user.id}. Verification token: {token}")
+        # print(f"Verification requested for user {user.id}. Verification token: {token}")
 
 
 async def get_user_manager(user_db: BeanieUserDatabase = Depends(get_user_db)):
