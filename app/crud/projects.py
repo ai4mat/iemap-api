@@ -1,3 +1,4 @@
+from typing import List
 from models.iemap import FileProject, Property
 
 from db.mongodb import AsyncIOMotorClient
@@ -5,6 +6,7 @@ from bson.objectid import ObjectId
 from core.config import Config
 
 from models.iemap import Project as IEMAPModel
+from models.iemap import ProjectQueryResult
 from crud.pipelines import get_properties_files
 
 database_name, ai4mat_collection_name = (Config.mongo_db, Config.mongo_coll)
@@ -286,6 +288,21 @@ async def find_all_project_paginated(
     result = await coll.find(paginated_query).limit(limit).sort([sort]).to_list(None)
     next_key = next_key_fn(result)
     return result, next_key
+
+
+async def exec_query(conn: AsyncIOMotorClient, query_params: dict):
+    query = {}
+    if query_params.id:
+        query["_id"] = ObjectId(query_params.id)
+    coll = conn[database_name][ai4mat_collection_name]
+    result_query = await coll.find(query).to_list(None)
+    response = []
+    # {"_id": ObjectId("6333075e1fd43266d2a6196a")}
+    for doc in result_query:
+        response.append(ProjectQueryResult(**doc))
+        # if "_id" in doc.keys():
+        #     doc.pop("_id")
+    return response
 
 
 # https://medium.com/@madhuri.pednekar/handling-mongodb-objectid-in-python-fastapi-4dd1c7ad67cd
