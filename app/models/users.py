@@ -2,6 +2,7 @@ from typing import Optional
 
 from beanie import PydanticObjectId
 from fastapi import Depends, Request
+from starlette.datastructures import URL
 from fastapi_users import BaseUserManager, FastAPIUsers
 from fastapi_users.authentication import (
     AuthenticationBackend,
@@ -14,6 +15,10 @@ from db.mongodb_utils import UserAuth, get_user_db
 from core.smtp_email import Email
 from core.config import Config
 
+from fastapi_users.manager import BaseUserManager
+from fastapi_users import exceptions
+from fastapi_users.jwt import generate_jwt
+
 SECRET = Config.secrete_on_premise_auth
 
 
@@ -22,19 +27,30 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
     verification_token_secret = SECRET
 
     async def on_after_register(
-        self, user: UserAuth, request: Optional[Request] = None
+        self,
+        user: UserAuth,
+        request: Optional[Request] = None,
     ):
-        # await user.update({"$set": {"is_active": False}})
-        # print(f"User {user.id} has registered.")
-        # retrieve requested url to use for link to embend in email sent to user
-        strBaseRequest = str(request.url).split("auth/request-verify-token")[0]
-        strEndpointVerifyByEmail = "auth/verify-email/"
-        em = Email()
-        # send email to user to verify his/her email
-        # eventually add other email to list to notify an administrator
-        em.send_verify_email(
-            [user.email], strBaseRequest + strEndpointVerifyByEmail, token
+        # CHECK IF USER IS ACTIVE AND NOT ALREADY VERIFIED
+        # THEN GENERATE TEMPORARY TOKEN AND EMIT on_after_request_verify
+        if not user.is_active:
+            raise exceptions.UserInactive()
+        if user.is_verified:
+            raise exceptions.UserAlreadyVerified()
+
+        token_data = {
+            "user_id": str(user.id),
+            "email": user.email,
+            "aud": self.verification_token_audience,
+        }
+        token = generate_jwt(
+            token_data,
+            self.verification_token_secret,
+            self.verification_token_lifetime_seconds,
         )
+        # modify url to correctly invoke request
+        request._url = URL(str(request.url).replace("auth/register", ""))
+        await self.on_after_request_verify(user, token, request)
 
     async def on_after_forgot_password(
         self, user: UserAuth, token: str, request: Optional[Request] = None
