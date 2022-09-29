@@ -36,6 +36,7 @@ from crud.projects import (
     list_project_properties_files,
     list_projects,
     add_property_file,
+    exec_query,
 )
 from models.iemap import (
     PropertyFile,
@@ -50,6 +51,7 @@ from models.iemap import (
     Property,
     fileType,
     newProjectResponse,
+    queryModel,
 )
 
 
@@ -544,6 +546,36 @@ async def form_add_project_file(
                 status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unable to save file"
             )
     raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="You must provide a file")
+
+
+@router.get("/project/query/", tags=["projects"])
+async def form_add_project_file(
+    params: queryModel = Depends(), db: AsyncIOMotorClient = Depends(get_database)
+):
+    """Add file to project using Multi-Part Form data
+
+    Args:
+        project_id (ObjectIdStr): document id to add file to
+        form_data (ProjectFileForm): form data fields. Defaults to Depends(ProjectFileForm.as_form).
+        fileupload (UploadFile ): file to upload (as form key use 'fileupload').
+        db (AsyncIOMotorClient ): Motor client connection to MongoDb. Defaults to Depends(get_database).
+
+    Raises:
+        HTTPException: HTTP 500 Internal Server Error if unable to save file
+        HTTPException: HTTP 400 bad request if file was not provided
+
+
+    Returns:
+        dict: {
+            "hash_file"(str): hash file saved on file system,
+            "file_size"(str): file size in human readable format,
+            "file_ext"(str): file extension
+        }
+    """
+    # params_as_dict = params.dict()
+
+    result = await exec_query(db, params)
+    return result
 
 
 # https://github.com/tiangolo/fastapi/issues/362
