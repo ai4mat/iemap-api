@@ -1,7 +1,7 @@
 import logging
 
 import aiofiles
-from typing import Optional
+from typing import Optional, List, Union
 from bson.objectid import ObjectId as BsonObjectId
 from core.parsing import parse_cif
 from core.utils import get_dir_uploaded, get_str_file_size, hash_file, save_file
@@ -14,6 +14,7 @@ from fastapi import (
     status,
     File,
     Form,
+    Query,
     UploadFile,
     HTTPException,
     Request,
@@ -550,7 +551,9 @@ async def form_add_project_file(
 
 @router.get("/project/query/", tags=["projects"])
 async def form_add_project_file(
-    params: queryModel = Depends(), db: AsyncIOMotorClient = Depends(get_database)
+    params: queryModel = Depends(),
+    db: AsyncIOMotorClient = Depends(get_database),
+    response_model=queryModel,
 ):
     """Add file to project using Multi-Part Form data
 
@@ -576,6 +579,12 @@ async def form_add_project_file(
 
     result = await exec_query(db, params)
     return result
+
+
+@router.get("/project/test/", tags=["projects"], status_code=status.HTTP_200_OK)
+async def test_query(test: Optional[List[Union[str, float]]] = Query(None)) -> dict:
+    print(test)
+    return test
 
 
 # https://github.com/tiangolo/fastapi/issues/362
