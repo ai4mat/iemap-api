@@ -184,4 +184,13 @@ def get_dir_uploaded(upload_dir: str) -> Path:
     )
 
 
+def get_value_float_or_str(x):
+    if x == None:
+        return None
+    try:
+        return float(x)
+    except ValueError:
+        return x
+
+
 # https://www.programiz.com/python-programming/examples/hash-file
