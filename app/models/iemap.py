@@ -4,10 +4,10 @@ from enum import Enum
 
 
 from bson.objectid import ObjectId as BsonObjectId
-from typing import Annotated, List, Union, Optional, Type
+from typing import Annotated, List, Union, Optional, Type, Tuple
 import inspect
 import json
-from pydantic import BaseModel, SecretStr, Field, validator, create_model
+from pydantic import BaseModel, SecretStr, Field, validator, create_model, EmailStr
 from pydantic.class_validators import root_validator
 from fastapi import Form
 from uuid import uuid4
@@ -232,7 +232,29 @@ class ProjectQueryResult(BaseModel):
 
 
 # Put your query arguments in this dict
-query_params = {"id": (str, None), "field": (str, "all")}
+query_params = {
+    "id": (str, None),
+    "fields_output": (str, "all"),
+    "affiliation": (str, None),
+    "project_name": (str, None),
+    "provenance_email": (EmailStr, None),
+    "publication_dates": (str, None),
+    "date_publication": (datetime, None),
+    "material_formula": (str, None),
+    "material_all_elements": (str, None),
+    "material_any_element": (str, None),
+    "iemap_id": (str, None),
+    "isExperiment": (bool, None),
+    "simulationCode": (str, None),
+    "experimentInstrument": (str, None),
+    "simulationMethod": (str, None),
+    "experimentMethod": (str, None),
+    "parameterName": (str, None),
+    "parameterValue": (Union[str, float], None),
+    "propertyName": (str, None),
+    "propertyValue": (Union[str, float], None),
+    "fields": (str, None),
+}
 
 queryModel = create_model("Query", **query_params)
 

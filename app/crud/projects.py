@@ -1,5 +1,6 @@
 from typing import List
-from models.iemap import FileProject, Property
+from core.utils import get_value_float_or_str
+from models.iemap import FileProject, Property, queryModel
 
 from db.mongodb import AsyncIOMotorClient
 from bson.objectid import ObjectId
@@ -8,6 +9,8 @@ from core.config import Config
 from models.iemap import Project as IEMAPModel
 from models.iemap import ProjectQueryResult
 from crud.pipelines import get_properties_files
+
+from dateutil.parser import parse
 
 database_name, ai4mat_collection_name = (Config.mongo_db, Config.mongo_coll)
 
@@ -290,16 +293,94 @@ async def find_all_project_paginated(
     return result, next_key
 
 
-async def exec_query(conn: AsyncIOMotorClient, query_params: dict):
-    query = {}
-    if query_params.id:
-        query["_id"] = ObjectId(query_params.id)
+async def exec_query(conn: AsyncIOMotorClient, qp: queryModel):
+
+    get_affiliation = lambda x: x.affiliation.split(",") if x.affiliation else None
+    get_dates = (
+        lambda x: {"$gte": parse(x[0]), "$lte": parse(x[1])}
+        if len(x) > 1
+        else {"$gte": parse(x[0])}
+    )
+
+    get_list_elements = lambda x: list(x.split(",")) if x else None
+
+    query = {
+        "_id" if qp.id else None: ObjectId(qp.id),
+        "provenance.affiliation"
+        if qp.affiliation
+        else None: {"$in": get_affiliation(qp)},
+        "project.name" if qp.project_name else None: qp.project_name,
+        "provenance.email" if qp.provenance_email else None: qp.provenance_email,
+        "material.formula" if qp.material_formula else None: qp.material_formula,
+        "iemap_id" if qp.iemap_id else None: qp.iemap_id,
+        "process.isExperiment" if qp.isExperiment != None else None: qp.isExperiment,
+        # simulationCode translate into the 2 following fields ~~~~~~~~~~~~~~~~~~~
+        "process.isExperiment" if qp.simulationCode else None: False,
+        "process.agent.name" if qp.simulationCode else None: qp.simulationCode,
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # experimentInstrument translate into the 2 following fields ~~~~~~~~~~~~~~~~~~~
+        "process.isExperiment" if qp.experimentInstrument else None: True,
+        "process.agent.name"
+        if qp.experimentInstrument
+        else None: qp.experimentInstrument,
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # simulationMethod translate into the 2 following fields ~~~~~~~~~~~~~~~~~~~
+        "process.isExperiment" if qp.simulationMethod else None: False,
+        "process.method" if qp.simulationMethod else None: qp.simulationMethod,
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # simulationMethod translate into the 2 following fields ~~~~~~~~~~~~~~~~~~~
+        "process.isExperiment" if qp.experimentMethod else None: True,
+        "process.method" if qp.experimentMethod else None: qp.experimentMethod,
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        "parameters"
+        if qp.parameterName and not qp.parameterValue
+        else None: {"$elemMatch": {"name": qp.parameterName}},
+        "parameters"
+        if qp.parameterValue and qp.parameterValue
+        else None: {
+            "$elemMatch": {
+                "name": qp.parameterName,
+                "value": get_value_float_or_str(qp.parameterValue),
+            }
+        },
+        "properties"
+        if qp.propertyName and not qp.propertyValue
+        else None: {"$elemMatch": {"name": qp.propertyName}},
+        "properties"
+        if qp.propertyName and qp.propertyValue
+        else None: {
+            "$elemMatch": {
+                "name": qp.propertyName,
+                "value": get_value_float_or_str(qp.propertyValue),
+            }
+        },
+        "provenance.createdAt"
+        if qp.publication_dates
+        else None: get_dates(qp.publication_dates)
+        if qp.publication_dates
+        else None,
+        "material.elements"
+        if qp.material_all_elements
+        else None: {"$all": get_list_elements(qp.material_all_elements)},
+        "material.elements"
+        if qp.material_any_element
+        else None: get_list_elements(qp.material_any_element),
+    }
+    del query[None]  # removes single None:None introduced from above dict definition
+    # print(query)
+
+    projection = {}
+    if qp.fields:
+        projection = {i: 1 for i in qp.fields.split(",")}
+    # print(projection)
     coll = conn[database_name][ai4mat_collection_name]
-    result_query = await coll.find(query).to_list(None)
+
+    result_query = await coll.find(query, projection).to_list(None)
     response = []
     # {"_id": ObjectId("6333075e1fd43266d2a6196a")}
     for doc in result_query:
-        response.append(ProjectQueryResult(**doc))
+        # convert to dict and exclude none
+        response.append(ProjectQueryResult(**doc).dict(exclude_none=True))
         # if "_id" in doc.keys():
         #     doc.pop("_id")
     return response

@@ -48,9 +48,15 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
             self.verification_token_secret,
             self.verification_token_lifetime_seconds,
         )
-        # modify url to correctly invoke request
-        request._url = URL(str(request.url).replace("auth/register", ""))
-        await self.on_after_request_verify(user, token, request)
+
+        # retrieve requested url to use for link to embend in email sent to user
+        strBaseRequest = str(request.url).split("auth/register")[0]
+        strEndpointVerifyByEmail = "auth/verify-email/"
+        strEndpointToEmbedinEmail = strBaseRequest + strEndpointVerifyByEmail
+        em = Email()
+        # send email to user to verify his/her email
+        # eventually add other email to list to notify an administrator
+        em.send_verify_email([user.email], strEndpointToEmbedinEmail, token)
 
     async def on_after_forgot_password(
         self, user: UserAuth, token: str, request: Optional[Request] = None
