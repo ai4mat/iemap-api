@@ -553,7 +553,7 @@ async def form_add_project_file(
 async def form_add_project_file(
     params: queryModel = Depends(),
     db: AsyncIOMotorClient = Depends(get_database),
-    response_model=queryModel,
+    # response_model=queryModel, #THIS broke swagger auto documentation, FIX THIS!!
 ):
     """Add file to project using Multi-Part Form data
 
