@@ -1,4 +1,5 @@
 from typing import List
+
 from core.utils import get_value_float_or_str
 from models.iemap import FileProject, Property, queryModel
 
