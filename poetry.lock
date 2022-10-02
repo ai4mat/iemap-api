@@ -7,6 +7,18 @@ optional = false
 python-versions = ">=3.7,<4.0"
 
 [[package]]
+name = "aiosmtplib"
+version = "1.1.7"
+description = "asyncio SMTP client"
+category = "main"
+optional = false
+python-versions = ">=3.5.2,<4.0.0"
+
+[package.extras]
+uvloop = ["uvloop (>=0.13,<0.15)"]
+docs = ["sphinx (>=2,<4)", "sphinx_autodoc_typehints (>=1.7.0,<2.0.0)", "jinja2 (>=2.0,<3.1)"]
+
+[[package]]
 name = "anyio"
 version = "3.4.0"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
@@ -72,7 +84,7 @@ typecheck = ["mypy"]
 
 [[package]]
 name = "beanie"
-version = "1.11.11"
+version = "1.11.12"
 description = "Asynchronous Python ODM for MongoDB"
 category = "main"
 optional = false
@@ -245,7 +257,7 @@ idna = ">=2.0.0"
 
 [[package]]
 name = "emmet-core"
-version = "0.36.1"
+version = "0.36.4"
 description = "Core Emmet Library"
 category = "main"
 optional = false
@@ -321,7 +333,7 @@ dev = ["asgi-lifespan", "httpx", "bumpversion", "flit", "asynctest", "pytest-moc
 
 [[package]]
 name = "fonttools"
-version = "4.37.3"
+version = "4.37.4"
 description = "Tools to manipulate font files"
 category = "main"
 optional = false
@@ -480,14 +492,14 @@ encryption = ["pymongo[encryption] (>=3.12,<4)"]
 
 [[package]]
 name = "mp-api"
-version = "0.27.3"
+version = "0.27.5"
 description = "API Server for the Materials Project"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 
 [package.dependencies]
-emmet-core = ">=0.35.3"
+emmet-core = ">=0.36.4"
 monty = ">=2021.3.12"
 msgpack = "*"
 pymatgen = ">=2022.3.7"
@@ -495,7 +507,7 @@ requests = ">=2.23.0"
 typing-extensions = ">=3.7.4.1"
 
 [package.extras]
-all = ["emmet-core[all] (>=0.35.3custodian)", "mpcontribs-client", "boto3"]
+all = ["emmet-core[all] (>=0.36.4custodian)", "mpcontribs-client", "boto3"]
 
 [[package]]
 name = "mpmath"
@@ -535,7 +547,7 @@ python-versions = "*"
 
 [[package]]
 name = "networkx"
-version = "2.8.6"
+version = "2.8.7"
 description = "Python package for creating and manipulating graphs and networks"
 category = "main"
 optional = false
@@ -543,7 +555,7 @@ python-versions = ">=3.8"
 
 [package.extras]
 default = ["numpy (>=1.19)", "scipy (>=1.8)", "matplotlib (>=3.4)", "pandas (>=1.3)"]
-developer = ["pre-commit (>=2.20)", "mypy (>=0.961)"]
+developer = ["pre-commit (>=2.20)", "mypy (>=0.981)"]
 doc = ["sphinx (>=5)", "pydata-sphinx-theme (>=0.9)", "sphinx-gallery (>=0.10)", "numpydoc (>=1.4)", "pillow (>=9.1)", "nb2plots (>=0.6)", "texext (>=0.6.6)"]
 extra = ["lxml (>=4.6)", "pygraphviz (>=1.9)", "pydot (>=1.4.2)", "sympy (>=1.10)"]
 test = ["pytest (>=7.1)", "pytest-cov (>=3.0)", "codecov (>=2.1)"]
@@ -807,7 +819,7 @@ six = ">=1.4.0"
 
 [[package]]
 name = "pytz"
-version = "2022.2.1"
+version = "2022.4"
 description = "World timezone definitions, modern and historical"
 category = "main"
 optional = false
@@ -1130,10 +1142,11 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "ac848bff8b7545290c6475db2cf22fef4f6a0369bd601ec946b1c51ecafea4ec"
+content-hash = "c2109a97372ab357d3ff405c4fe80d3e24c39305db02921f269485e339101f2e"
 
 [metadata.files]
 aiofiles = []
+aiosmtplib = []
 anyio = [
     {file = "anyio-3.4.0-py3-none-any.whl", hash = "sha256:2855a9423524abcdd652d942f8932fda1735210f77a6b392eafd9ff34d3fe020"},
     {file = "anyio-3.4.0.tar.gz", hash = "sha256:24adc69309fb5779bc1e06158e143e0b6d2c56b302a3ac3de3083c705a6ed39d"},

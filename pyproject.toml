@@ -40,6 +40,7 @@ pymatgen = "^2022.4.26"
 Jinja2 = "^3.1.2"
 beanie = "^1.11.0"
 fastapi-users = {extras = ["beanie"], version = "^10.0.6"}
+aiosmtplib = "^1.1.7"
 
 
 
