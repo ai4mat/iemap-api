@@ -185,6 +185,16 @@ def get_dir_uploaded(upload_dir: str) -> Path:
 
 
 def get_value_float_or_str(x):
+    """Get value as float or string
+        first check if value can be correctly converted to float
+        if not return it as string
+        if None return it as is
+    Args:
+        x (str|float|None): value to convert
+
+    Returns:
+        str|float|None: value converted
+    """
     if x == None:
         return None
     try:
