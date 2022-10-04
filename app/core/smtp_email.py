@@ -81,3 +81,6 @@ async def readVerifyMailTemplate(filename, linkToVerifyEndpoint):
         link = f'href="{linkToVerifyEndpoint}"'
         contents = contents.replace('href="{{}}"', link)
         return contents
+
+
+# https://stackoverflow.com/questions/60224850/send-mail-python-asyncio#60226128
