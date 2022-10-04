@@ -18,7 +18,7 @@ from pydantic import Field
 class UserAuth(BeanieBaseUser[PydanticObjectId]):
     # ADD ANY ADDITIONAL FIELD AS DEFINED in app/models/schemas.py
     affiliation: Optional[str] = None
-    createdAt: Optional[datetime] = datetime.now().utcnow()
+    created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
     # pass
 
