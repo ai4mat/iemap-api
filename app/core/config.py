@@ -55,6 +55,7 @@ class Config(object):
     allowed_hosts = CommaSeparatedStrings(config.get("ALLOWED_HOSTS", "*"))
     api_v1_str = config["API_V1_STR"]
     files_dir = config["FILESDIR"]
+    files_chunk_size = int(config.get("FILES_CHUNK_SIZE", 1024 * 1024 * 10))
     allowed_mime_types = allowed_mime_types
     enable_onpremise_auth = bool(config["ENABLE_ONPREMISE_AUTH"] == "True")
     secrete_on_premise_auth = config["SECRET_ONPREMISE_AUTH"]

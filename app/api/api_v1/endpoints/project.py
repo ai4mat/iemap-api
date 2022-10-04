@@ -233,7 +233,9 @@ async def create_project_file(
 
         # SLOWER VERSION BUT DOES NOT LOAD ENTIRE FILE IN MEMORY
         async with aiofiles.open(file_to_write, "wb") as out_file:
-            while content := await file.read(1024 * 1024):  # async read chunk
+            while content := await file.read(
+                Config.files_chunk_size
+            ):  # async read chunk
                 await out_file.write(content)  # async write chunk
         # content = file.file.read()
         structure, distinct_species, lattice = None, None, None
@@ -321,7 +323,9 @@ async def create_property_file(
 
         # SLOWER VERSION BUT DOES NOT LOAD ENTIRE FILE IN MEMORY
         async with aiofiles.open(file_to_write, "wb") as out_file:
-            while content := await file.read(1024 * 1024):  # async read chunk
+            while content := await file.read(
+                Config.files_chunk_size
+            ):  # async read chunk
                 await out_file.write(content)  # async write chunk
         # content = file.file.read()
         structure, distinct_species, lattice = None, None, None

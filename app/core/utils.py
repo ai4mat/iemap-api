@@ -39,7 +39,7 @@ def hash_file(filename: str) -> str:
         chunk = 0
         while chunk != b"":
             # read only 1024 bytes at a time
-            chunk = file.read(1024)
+            chunk = file.read(Config.files_chunk_size)
             h.update(chunk)
 
     # return the hex representation of digest
@@ -149,7 +149,9 @@ async def save_file(file: UploadFile, upload_dir: str):
         with open(file_to_write, "wb+") as file_object:
             # SLOWER VERSION BUT DOES NOT LOAD ENTIRE FILE IN MEMORY
             async with aiofiles.open(file_to_write, "wb") as out_file:
-                while content := await file.read(1024 * 1024):  # async read chunk
+                while content := await file.read(
+                    Config.files_chunk_size
+                ):  # async read chunk
                     await out_file.write(content)  # async write chunk
             file_hash = hash_file(file_to_write)
             # full path of new file name
