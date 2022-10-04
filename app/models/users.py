@@ -19,6 +19,8 @@ from fastapi_users import exceptions
 from fastapi_users.jwt import generate_jwt
 from pathlib import Path
 
+from datetime import datetime
+from fastapi.security import OAuth2PasswordRequestForm
 
 SECRET = Config.secrete_on_premise_auth
 
@@ -26,6 +28,15 @@ SECRET = Config.secrete_on_premise_auth
 class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
+
+    async def authenticate(
+        self, credentials: OAuth2PasswordRequestForm
+    ) -> Optional[UserAuth]:
+        user = await super().authenticate(credentials)
+        if user is not None:
+            user.last_login = datetime.now().utcnow()
+            await user.save()
+        return user
 
     async def on_after_register(
         self,
@@ -49,6 +60,10 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
             self.verification_token_secret,
             self.verification_token_lifetime_seconds,
         )
+
+        if user is not None:
+            user.created_at = datetime.now().utcnow()
+            await user.save()
 
         # retrieve requested url to use for link to embend in email sent to user
         strBaseRequest = str(request.url).split("auth/register")[0]
