@@ -375,8 +375,10 @@ async def exec_query(conn: AsyncIOMotorClient, qp: queryModel):
         projection = {i: 1 for i in qp.fields.split(",")}
     # print(projection)
     coll = conn[database_name][ai4mat_collection_name]
-
-    result_query = await coll.find(query, projection).to_list(None)
+    if len(projection) > 0:
+        result_query = await coll.find(query, projection).to_list(None)
+    else:
+        result_query = await coll.find(query).to_list(None)
     response = []
     # {"_id": ObjectId("6333075e1fd43266d2a6196a")}
     for doc in result_query:
