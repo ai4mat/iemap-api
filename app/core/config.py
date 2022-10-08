@@ -15,11 +15,13 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # one week
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 allowed_mime_types = [
     "text/csv",
-    # "application/zip",
+    "application/x-zip-compressed",
+    "application/zip-compressed",
     "application/octet-stream",  # .cif
     "application/pdf",
     "text/plain",
-    "chemical/x-cif",
+    "application/rtf" "chemical/x-cif",
+    "text/x-markdown",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -49,7 +51,9 @@ class Config(object):
     jwt_secret_key = config["JWT_SECRET_KEY"]
     jwt_algorithm = config["JWT_ALGORITHM"]
     jwt_token_prefix = "Token"
-    jwt_lifetime = int(config["JWT_LIFETIME"]) if config.get("JWT_LIFETIME") else 3600
+    jwt_lifetime = (
+        int(config["JWT_LIFETIME"]) if config.get("JWT_LIFETIME") else 3600 * 24
+    )  # 24h
     access_token_expire_minutes = 60 * 24 * 7  # one week
     app_name = config["APP_NAME"]
     allowed_hosts = CommaSeparatedStrings(config.get("ALLOWED_HOSTS", "*"))
