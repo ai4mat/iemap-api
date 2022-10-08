@@ -17,11 +17,11 @@ allowed_mime_types = [
     "text/csv",
     "application/x-zip-compressed",
     "application/zip-compressed",
-    "application/octet-stream",  # .cif
+    "application/octet-stream",
     "application/pdf",
     "text/plain",
     "application/rtf",
-    "chemical/x-cif",
+    "chemical/x-cif",  # .cif
     "text/x-markdown",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.ms-excel",
