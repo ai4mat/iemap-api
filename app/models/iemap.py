@@ -188,7 +188,7 @@ def validate_datetime(cls, values):
 
 class newProject(BaseModel):
     identifier: Optional[str]
-    iemap_id: Optional[str] = "iemap-" + uuid4().hex[:6].upper()
+    iemap_id: str=None 
     provenance: Optional[Provenance]
     project: Project
     process: Process
@@ -197,6 +197,12 @@ class newProject(BaseModel):
     properties: List[Property]
     # files: Optional[List[FileProject]] = None
     _v: Optional[str] = Field(default="1_0")
+
+    # this define a default value for iemap_id if not provided
+    # alternatively use Field with default_factory or PrivateAttr with default_factory
+    @validator("iemap_id", pre=True, always=True)
+    def set_id(cls, v):
+        return v or "iemap-" + str(uuid4())[:6]
 
     class Config:
         validate_assignment = True
