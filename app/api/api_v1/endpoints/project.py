@@ -1,11 +1,16 @@
 import logging
-
-import aiofiles
+import aiofiles.os
 from typing import Optional, List, Union
 from bson.objectid import ObjectId as BsonObjectId
 from core.parsing import parse_cif
-from core.utils import get_dir_uploaded, get_str_file_size, hash_file, save_file
-from os import rename, getcwd, path
+from core.utils import (
+    get_dir_uploaded,
+    get_str_file_size,
+    hash_file,
+    rename_file_with_its_hash,
+    save_file,
+)
+from os import path, rename
 from dotenv import dotenv_values, find_dotenv
 from pydantic import Json
 from fastapi import (
@@ -20,7 +25,7 @@ from fastapi import (
     Request,
 )
 
-# from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse
 from db.mongodb import AsyncIOMotorClient, get_database
 
 # NECESSARY TO HANDLE FASTAPI_USERS
@@ -226,7 +231,6 @@ async def create_project_file(
     # retrieve file extension
     file_ext = file.filename.split(".")[-1]
     # file to write full path
-
     file_to_write = get_dir_uploaded(upload_dir) / file.filename
     # write file to disk in chunks
     with open(file_to_write, "wb+") as file_object:
@@ -238,18 +242,24 @@ async def create_project_file(
             ):  # async read chunk
                 await out_file.write(content)  # async write chunk
         # content = file.file.read()
-        structure, distinct_species, lattice = None, None, None
-        if file_ext == "cif":
-            structure, distinct_species, lattice = parse_cif(file_to_write)
-        # compute file hash  & rename file on FileSystem accordgly
-        hash = hash_file(file_to_write)
-        new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
-        #  f"{upload_dir}/{hash}.{file_ext}"
-        rename(file_to_write, new_file_name)
+        # structure, distinct_species, lattice = None, None, None
+        # if file_ext == "cif":
+        #     structure, distinct_species, lattice = parse_cif(file_to_write)
 
+        # compute file hash  & rename file on FileSystem accordingly
+        new_file_name = await rename_file_with_its_hash(
+            file_to_write, file_ext, upload_dir
+        )
+        # hash = hash_file(file_to_write)
+        # new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
+        # #  f"{upload_dir}/{hash}.{file_ext}"
+        # rename(file_to_write, new_file_name)
+        # retrieve hash from file name
+
+    if new_file_name != None:
+        hash = str(new_file_name).split("/")[-1].split(".")[0]
         # get file size
         file_size = get_str_file_size(new_file_name)
-
         fp = FileProject(
             hash=hash,
             # if file_name is not passed as property in url endpoint then save file name in DB
@@ -262,16 +272,22 @@ async def create_project_file(
         update_modified_count, update_matched_count = await add_project_file(
             db, id_mongodb, fp
         )
+        if update_modified_count > 0:
+            return {
+                "file_name": fp.name,
+                "file_hash": hash,
+                "file_size": file_size,
+            }
         if update_modified_count == 0:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Document not updated",
             )
-    return {
-        "file_name": f"{file.filename}",
-        "file_hash": f"{hash}",
-        "file_size": file_size,
-    }
+    if new_file_name == None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="File yet existing, unable to overwite. Please, first delete it, to replace it with new content",
+        )
 
 
 # ADD PROPERTY FILE TO PROJECT
