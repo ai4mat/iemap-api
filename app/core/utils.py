@@ -1,9 +1,10 @@
 import enum
 import hashlib
 import json
-from os import rename, path
-import aiofiles
-from pathlib import Path
+from os import path
+from typing import Union
+from aiofiles.os import rename, remove
+from pathlib import Path, PosixPath
 from math import modf, trunc
 from bson.objectid import ObjectId
 from fastapi.encoders import jsonable_encoder
@@ -184,6 +185,34 @@ def get_dir_uploaded(upload_dir: str) -> Path:
         if "app" in str(Path.cwd()).split("/")
         else Path.cwd() / upload_dir
     )
+
+
+async def rename_file_with_its_hash(
+    file_to_write: PosixPath, file_ext: str, upload_dir: str
+) -> Union[str, None]:
+    """Rename file with its hash if it already DOES NOT exists
+       otherwise delete file (not yet renamed with its hash)
+
+    Args:
+        file_to_write (PosixPath): full path file to write
+        file_ext (str): file extention to
+        upload_dir (str): name folder where save data
+    Returns:
+        str|None: new file name (hash+original extention) or None if file yet existing (no overwrite allowed)
+
+    """
+    # compute file hashing (data saved in chunk)
+    # hash computed after saving file with its original name
+    hash = hash_file(file_to_write)
+    # get new file name = HASH+extention
+    new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
+    if not new_file_name.exists():
+        await rename(file_to_write, new_file_name)
+        return new_file_name
+    else:
+        # delete original file before returning None, i.e. no file uploaded
+        await remove(file_to_write)
+        return None
 
 
 def get_value_float_or_str(x):
