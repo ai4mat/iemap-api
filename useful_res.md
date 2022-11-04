@@ -91,7 +91,8 @@
 >  [PyDantic datamodel code generator](https://pydantic-docs.helpmanual.io/datamodel_code_generator/)  
 > [Pydantic](https://pydantic.org/)  
 > [Pydantic Video Tutorial](https://youtu.be/Vj-iU-8_xLs)  
-> [Validators vs Custom data types](https://towardsdev.com/pydantic-validators-v-s-custom-data-type-2c65c6402829)
+> [Validators vs Custom data types](https://towardsdev.com/pydantic-validators-v-s-custom-data-type-2c65c6402829)  
+> [How can we use default_factory in a Pydantic field?](https://medium.com/@wucean/how-can-we-use-default-factory-in-a-pydantic-field-3c5d62f624d6)
 
 #### POETRY
 
