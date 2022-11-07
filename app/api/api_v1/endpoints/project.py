@@ -246,17 +246,11 @@ async def create_project_file(
         # if file_ext == "cif":
         #     structure, distinct_species, lattice = parse_cif(file_to_write)
 
-        # compute file hash  & rename file on FileSystem accordingly
-        new_file_name = await rename_file_with_its_hash(
-            file_to_write, file_ext, upload_dir
-        )
-        # hash = hash_file(file_to_write)
-        # new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
-        # #  f"{upload_dir}/{hash}.{file_ext}"
-        # rename(file_to_write, new_file_name)
-        # retrieve hash from file name
+    # compute file hash & rename file on FileSystem accordingly
+    new_file_name = await rename_file_with_its_hash(file_to_write, file_ext, upload_dir)
 
     if new_file_name != None:
+        # extract HASH part only
         hash = str(new_file_name).split("/")[-1].split(".")[0]
         # get file size
         file_size = get_str_file_size(new_file_name)
@@ -286,7 +280,7 @@ async def create_project_file(
     if new_file_name == None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="File yet existing, unable to overwite. Please, first delete it, to replace it with new content",
+            detail="File yet existing, unable to overwite. Please first delete it before replacing it with new content!",
         )
 
 
@@ -344,16 +338,18 @@ async def create_property_file(
             ):  # async read chunk
                 await out_file.write(content)  # async write chunk
         # content = file.file.read()
-        structure, distinct_species, lattice = None, None, None
-        if file_ext == "cif":
-            structure, distinct_species, lattice = parse_cif(file_to_write)
-        hash = hash_file(file_to_write)
+        # structure, distinct_species, lattice = None, None, None
+        # if file_ext == "cif":
+        #     structure, distinct_species, lattice = parse_cif(file_to_write)
         # h.update(content)
         # hash = h.hexdigest()
         # file_object.write(file.file.read())
+    # compute file hash & rename file on FileSystem accordingly
+    new_file_name = await rename_file_with_its_hash(file_to_write, file_ext, upload_dir)
 
-        new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
-        rename(file_to_write, new_file_name)
+    if new_file_name != None:
+        # extract HASH part only
+        hash = str(new_file_name).split("/")[-1].split(".")[0]
         str_file_size = get_str_file_size(new_file_name)
 
         fp = FileProject(
@@ -364,8 +360,11 @@ async def create_property_file(
             extention=file_ext,
             size=str_file_size,
         )
-        modified_count = await add_property_file(db, id_mongodb, fp, name)
+        modified_count, matched_count = await add_property_file(
+            db, id_mongodb, fp, name
+        )
         if modified_count == 0:
+            await aiofiles.os.remove(new_file_name)
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Unable to add property file",
@@ -375,6 +374,11 @@ async def create_property_file(
             "file_hash": f"{hash}",
             "file_size": str_file_size,
         }
+    if new_file_name == None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="File yet existing, unable to overwite. Please first delete it before replacing it with new content!",
+        )
 
 
 # @router.get("/files/{name_file}", tags=["projects"])
