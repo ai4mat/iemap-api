@@ -163,14 +163,14 @@ async def catch_all(request: Request, path_name: str):
     }
 
 
-if __name__ == "__main__":
-    # Use this for debugging purposes only
-    import uvicorn
+# if __name__ == "__main__":
+#     # Use this for debugging purposes only
+#     import uvicorn
 
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=Config.app_port,
-        log_level="info",
-        reload=True,
-    )
+#     uvicorn.run(
+#         "main:app",
+#         host="0.0.0.0",
+#         port=Config.app_port,
+#         log_level="info",
+#         reload=True,
+#     )
