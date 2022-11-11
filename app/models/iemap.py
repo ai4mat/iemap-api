@@ -84,14 +84,16 @@ class Lattice(BaseModel):
 
 class InputMaterial(BaseModel):
     lattice: Lattice
-    sites: str
-    species: str
+    sites: List[List[float]]
+    species: List[str]
+    cell: List[List[float]]
 
 
 class OutputMaterial(BaseModel):
     lattice: Lattice
-    sites: str
-    species: str
+    sites: List[List[float]]
+    species: List[str]
+    cell: List[List[float]]
 
 
 class Material(BaseModel):
