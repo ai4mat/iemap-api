@@ -83,14 +83,14 @@ class Lattice(BaseModel):
 
 
 class InputMaterial(BaseModel):
-    lattice: Lattice
+    lattice: Optional[Lattice]
     sites: List[List[float]]
     species: List[str]
     cell: List[List[float]]
 
 
 class OutputMaterial(BaseModel):
-    lattice: Lattice
+    lattice: Optional[Lattice]
     sites: List[List[float]]
     species: List[str]
     cell: List[List[float]]
