@@ -293,6 +293,15 @@ queryModel = create_model("Query", **query_params)
 #     return cls
 
 
+class userProjectsResponse(BaseModel):
+    id:PydanticObjectId
+    iemap_id:str
+    project_name: str
+    date_creation: datetime
+    experiment: bool
+    material: str
+
+
 def as_form(cls: Type[BaseModel]):
     new_parameters = []
 
