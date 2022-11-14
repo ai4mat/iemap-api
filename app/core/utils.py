@@ -3,7 +3,12 @@ import hashlib
 import json
 from os import path
 from typing import Union
-from aiofiles.os import rename, remove
+
+
+# from aiofiles.os import rename, remove
+import aiofiles
+from os import rename, remove
+
 from pathlib import Path, PosixPath
 from math import modf, trunc
 from bson.objectid import ObjectId
@@ -207,11 +212,13 @@ async def rename_file_with_its_hash(
     # get new file name = HASH+extention
     new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
     if not new_file_name.exists():
-        await rename(file_to_write, new_file_name)
+        # await rename(file_to_write, new_file_name)
+        rename(file_to_write, new_file_name)
         return new_file_name
     else:
         # delete original file before returning None, i.e. no file uploaded
-        await remove(file_to_write)
+        # await remove(file_to_write)
+        remove(file_to_write)
         return None
 
 
