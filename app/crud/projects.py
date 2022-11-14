@@ -9,7 +9,7 @@ from core.config import Config
 
 from models.iemap import Project as IEMAPModel
 from models.iemap import ProjectQueryResult
-from crud.pipelines import get_properties_files
+from crud.pipelines import get_properties_files, get_user_projects_base_info
 
 from dateutil.parser import parse
 
@@ -387,6 +387,15 @@ async def exec_query(conn: AsyncIOMotorClient, qp: queryModel):
         # if "_id" in doc.keys():
         #     doc.pop("_id")
     return response
+
+
+async def get_user_projects(
+    conn: AsyncIOMotorClient, user_email: str, affiliation: str
+) -> dict:
+    coll = conn[database_name][ai4mat_collection_name]
+    pipeline = get_user_projects_base_info(user_email, affiliation)
+    result = await coll.aggregate(pipeline).to_list(None)
+    return result
 
 
 # https://medium.com/@madhuri.pednekar/handling-mongodb-objectid-in-python-fastapi-4dd1c7ad67cd
