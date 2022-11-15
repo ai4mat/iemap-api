@@ -17,7 +17,8 @@ from fastapi.templating import Jinja2Templates
 
 # Initialize Sentry remote error tracking
 sentry_sdk.init(
-    "https://b7d66adc74fd443da385f61725111863@o1111757.ingest.sentry.io/6381392",
+    dsn="https://51844a09de0c494aaaa788de000153c9@o4504162406760448.ingest.sentry.io/4504162409578496",
+    # "https://b7d66adc74fd443da385f61725111863@o1111757.ingest.sentry.io/6381392",
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
     # We recommend adjusting this value in production.
