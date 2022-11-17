@@ -1,10 +1,13 @@
 import enum
 import hashlib
 import json
+import logging
 from os import path
 from typing import Union
 
+from sentry_sdk import capture_exception
 
+logger = logging.getLogger("ai4mat")
 # from aiofiles.os import rename, remove
 import aiofiles
 from os import rename, remove
@@ -208,18 +211,22 @@ async def rename_file_with_its_hash(
     """
     # compute file hashing (data saved in chunk)
     # hash computed after saving file with its original name
-    hash = hash_file(file_to_write)
-    # get new file name = HASH+extention
-    new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
-    if not new_file_name.exists():
-        # await rename(file_to_write, new_file_name)
-        rename(file_to_write, new_file_name)
-        return new_file_name
-    else:
-        # delete original file before returning None, i.e. no file uploaded
-        # await remove(file_to_write)
-        remove(file_to_write)
-        return None
+    try:
+        hash = hash_file(file_to_write)
+        # get new file name = HASH+extention
+        new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
+        if not new_file_name.exists():
+            # await rename(file_to_write, new_file_name)
+            rename(file_to_write, new_file_name)
+            return new_file_name
+        else:
+            # delete original file before returning None, i.e. no file uploaded
+            # await remove(file_to_write)
+            remove(file_to_write)
+            return None
+    except Exception as e:
+        logger.error(e)
+        capture_exception(e)
 
 
 def get_value_float_or_str(x):
