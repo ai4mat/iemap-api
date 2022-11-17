@@ -238,7 +238,7 @@ async def create_project_file(
 
     try:
         f = await run_in_threadpool(open, file_to_write, "wb")
-        await run_in_threadpool(copyfileobj, file.file, f)
+        await run_in_threadpool(copyfileobj, file.file, f, 1024 * 1024 * 10)
     except Exception as e:
         logger.error(e)
         capture_exception(e)
@@ -350,25 +350,39 @@ async def create_property_file(
     file_ext = file.filename.split(".")[-1]
     # file to write path
     file_to_write = get_dir_uploaded(upload_dir) / file.filename
-    # write file to disk in chunks
-    with open(file_to_write, "wb+") as file_object:
 
-        # SLOWER VERSION BUT DOES NOT LOAD ENTIRE FILE IN MEMORY
-        async with aiofiles.open(file_to_write, "wb") as out_file:
-            # read file all in memory before saving
-            content = await file.read()
-            # async read chunk
-            # while content := await file.read(
-            #     Config.files_chunk_size
-            # ):
-            await out_file.write(content)  # async write chunk
-        # content = file.file.read()
-        # structure, distinct_species, lattice = None, None, None
-        # if file_ext == "cif":
-        #     structure, distinct_species, lattice = parse_cif(file_to_write)
-        # h.update(content)
-        # hash = h.hexdigest()
-        # file_object.write(file.file.read())
+    try:
+        f = await run_in_threadpool(open, file_to_write, "wb")
+        await run_in_threadpool(copyfileobj, file.file, f, 1024 * 1024 * 10)
+    except Exception as e:
+        logger.error(e)
+        capture_exception(e)
+        return {"message": "There was an error uploading the file"}
+    finally:
+        if "f" in locals():
+            await run_in_threadpool(f.close)
+        await file.close()
+
+    # OLD VERSION
+    # write file to disk in chunks
+    # with open(file_to_write, "wb+") as file_object:
+
+    #     # SLOWER VERSION BUT DOES NOT LOAD ENTIRE FILE IN MEMORY
+    #     async with aiofiles.open(file_to_write, "wb") as out_file:
+    #         # read file all in memory before saving
+    #         content = await file.read()
+    #         # async read chunk
+    #         # while content := await file.read(
+    #         #     Config.files_chunk_size
+    #         # ):
+    #         await out_file.write(content)  # async write chunk
+    # content = file.file.read()
+    # structure, distinct_species, lattice = None, None, None
+    # if file_ext == "cif":
+    #     structure, distinct_species, lattice = parse_cif(file_to_write)
+    # h.update(content)
+    # hash = h.hexdigest()
+    # file_object.write(file.file.read())
     # compute file hash & rename file on FileSystem accordingly
     new_file_name = await rename_file_with_its_hash(file_to_write, file_ext, upload_dir)
 
