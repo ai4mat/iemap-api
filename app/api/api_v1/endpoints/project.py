@@ -239,6 +239,7 @@ async def create_project_file(
 
             # SLOWER VERSION BUT DOES NOT LOAD ENTIRE FILE IN MEMORY
             async with aiofiles.open(file_to_write, "wb") as out_file:
+<<<<<<< HEAD
                 # read entire file in memory NOT IN CHUNCKS
                 content = await file.read()
                 # # async read chunk
@@ -246,6 +247,12 @@ async def create_project_file(
                 #     Config.files_chunk_size
                 # ):
                 await out_file.write(content)  # async write chunk
+=======
+                while content := await file.read(
+                    Config.files_chunk_size
+                ):  # async read chunk
+                    await out_file.write(content)  # async write chunk
+>>>>>>> e4b0736d68252d048b78d8aaedc6a777fb3411cb
             # content = file.file.read()
             # structure, distinct_species, lattice = None, None, None
             # if file_ext == "cif":
