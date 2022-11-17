@@ -26,6 +26,7 @@ from fastapi import (
 )
 
 from fastapi.responses import JSONResponse
+from sentry_sdk import capture_exception
 from db.mongodb import AsyncIOMotorClient, get_database
 
 # NECESSARY TO HANDLE FASTAPI_USERS
@@ -233,19 +234,25 @@ async def create_project_file(
     # file to write full path
     file_to_write = get_dir_uploaded(upload_dir) / file.filename
     # write file to disk in chunks
-    with open(file_to_write, "wb+") as file_object:
+    try:
+        with open(file_to_write, "wb+") as file_object:
 
-        # SLOWER VERSION BUT DOES NOT LOAD ENTIRE FILE IN MEMORY
-        async with aiofiles.open(file_to_write, "wb") as out_file:
-            while content := await file.read(
-                Config.files_chunk_size
-            ):  # async read chunk
+            # SLOWER VERSION BUT DOES NOT LOAD ENTIRE FILE IN MEMORY
+            async with aiofiles.open(file_to_write, "wb") as out_file:
+                # read entire file in memory NOT IN CHUNCKS
+                content = await file.read()
+                # # async read chunk
+                # while content := await file.read(
+                #     Config.files_chunk_size
+                # ):
                 await out_file.write(content)  # async write chunk
-        # content = file.file.read()
-        # structure, distinct_species, lattice = None, None, None
-        # if file_ext == "cif":
-        #     structure, distinct_species, lattice = parse_cif(file_to_write)
-
+            # content = file.file.read()
+            # structure, distinct_species, lattice = None, None, None
+            # if file_ext == "cif":
+            #     structure, distinct_species, lattice = parse_cif(file_to_write)
+    except Exception as e:
+        logger.error(e)
+        capture_exception(e)
     # compute file hash & rename file on FileSystem accordingly
     new_file_name = await rename_file_with_its_hash(file_to_write, file_ext, upload_dir)
 
