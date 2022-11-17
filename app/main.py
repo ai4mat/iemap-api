@@ -54,6 +54,8 @@ app = FastAPI(
         "email": "iemap-api@enea.it",
     },
     license_info={"name": "MIT", "url": "https://mit-license.org/"},
+    # openapi_url="/openapi.json",
+    # root_path="/iemap",
 )
 # ADD SENTRY ASGI MIDDLEWARE, works fine with FastAPI
 app.add_middleware(SentryAsgiMiddleware)
