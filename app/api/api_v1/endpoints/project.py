@@ -340,10 +340,13 @@ async def create_property_file(
 
         # SLOWER VERSION BUT DOES NOT LOAD ENTIRE FILE IN MEMORY
         async with aiofiles.open(file_to_write, "wb") as out_file:
-            while content := await file.read(
-                Config.files_chunk_size
-            ):  # async read chunk
-                await out_file.write(content)  # async write chunk
+            # read file all in memory before saving
+            content = await file.read()
+            # async read chunk
+            # while content := await file.read(
+            #     Config.files_chunk_size
+            # ):
+            await out_file.write(content)  # async write chunk
         # content = file.file.read()
         # structure, distinct_species, lattice = None, None, None
         # if file_ext == "cif":
