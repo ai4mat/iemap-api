@@ -6,6 +6,7 @@ from typing import Optional, List, Union
 from bson.objectid import ObjectId as BsonObjectId
 from core.parsing import parse_cif
 from core.utils import (
+    delete_file_with_hash,
     get_dir_uploaded,
     get_str_file_size,
     hash_file,
@@ -40,12 +41,14 @@ from crud.projects import (
     add_project_file,
     add_project_file_and_data,
     add_property,
+    check_documents_having_files_with_hash,
     count_projects,
     find_all_project_paginated,
     list_project_properties_files,
     list_projects,
     add_property_file,
     exec_query,
+    pull_files_from_documents,
 )
 from models.iemap import (
     PropertyFile,
@@ -540,76 +543,76 @@ async def form_add_property_and_file(
 
 # ADD FILE TO PROJECT WITH DATA ****USING FORM****
 # http://0.0.0.0:8001/api/v1/project/add_file/62761c48856da47202945e05
-@router.post("/project/add_file_and_data/{project_id}", tags=["projects"])
-async def form_add_project_file(
-    project_id: ObjectIdStr,
-    form_data: ProjectFileForm = Depends(ProjectFileForm.as_form),
-    fileupload: UploadFile = File(...),
-    db: AsyncIOMotorClient = Depends(get_database),
-):
-    """Add file to project using Multi-Part Form data
+# @router.post("/project/add_file_and_data/{project_id}", tags=["projects"])
+# async def form_add_project_file(
+#     project_id: ObjectIdStr,
+#     form_data: ProjectFileForm = Depends(ProjectFileForm.as_form),
+#     fileupload: UploadFile = File(...),
+#     db: AsyncIOMotorClient = Depends(get_database),
+# ):
+#     """Add file to project using Multi-Part Form data
 
-    Args:
-        project_id (ObjectIdStr): document id to add file to
-        form_data (ProjectFileForm): form data fields. Defaults to Depends(ProjectFileForm.as_form).
-        fileupload (UploadFile ): file to upload (as form key use 'fileupload').
-        db (AsyncIOMotorClient ): Motor client connection to MongoDb. Defaults to Depends(get_database).
+#     Args:
+#         project_id (ObjectIdStr): document id to add file to
+#         form_data (ProjectFileForm): form data fields. Defaults to Depends(ProjectFileForm.as_form).
+#         fileupload (UploadFile ): file to upload (as form key use 'fileupload').
+#         db (AsyncIOMotorClient ): Motor client connection to MongoDb. Defaults to Depends(get_database).
 
-    Raises:
-        HTTPException: HTTP 500 Internal Server Error if unable to save file
-        HTTPException: HTTP 400 bad request if file was not provided
+#     Raises:
+#         HTTPException: HTTP 500 Internal Server Error if unable to save file
+#         HTTPException: HTTP 400 bad request if file was not provided
 
 
-    Returns:
-        dict: {
-            "hash_file"(str): hash file saved on file system,
-            "file_size"(str): file size in human readable format,
-            "file_ext"(str): file extension
-        }
-    """
-    if fileupload is not None and fileupload.filename != "":
-        if fileupload.content_type not in Config.allowed_mime_types:
-            raise HTTPException(400, detail="Invalid document type")
-        extention = fileupload.filename.split(".")[-1]
-        file_name = fileupload.filename.split(extention)[0]
-        upload_dir = Config.files_dir
-        file_hash, file_size, _ = await save_file(fileupload, upload_dir)
+#     Returns:
+#         dict: {
+#             "hash_file"(str): hash file saved on file system,
+#             "file_size"(str): file size in human readable format,
+#             "file_ext"(str): file extension
+#         }
+#     """
+#     if fileupload is not None and fileupload.filename != "":
+#         if fileupload.content_type not in Config.allowed_mime_types:
+#             raise HTTPException(400, detail="Invalid document type")
+#         extention = fileupload.filename.split(".")[-1]
+#         file_name = fileupload.filename.split(extention)[0]
+#         upload_dir = Config.files_dir
+#         file_hash, file_size, _ = await save_file(fileupload, upload_dir)
 
-        if file_hash:
-            file = FileProject(
-                name=form_data.name,
-                description=form_data.description,
-                type=fileType.from_str(form_data.type.lower()),
-                hash=file_hash,
-                size=file_size,
-                extention=extention,
-                isProcessed=form_data.isProcessed,
-            )
-            if form_data.publication_name:
-                file.publication = Publication(
-                    name=form_data.publication_name,
-                    date=form_data.publication_date,  # date conversion is done in Publication class
-                    url=form_data.publication_url,
-                )
+#         if file_hash:
+#             file = FileProject(
+#                 name=form_data.name,
+#                 description=form_data.description,
+#                 type=fileType.from_str(form_data.type.lower()),
+#                 hash=file_hash,
+#                 size=file_size,
+#                 extention=extention,
+#                 isProcessed=form_data.isProcessed,
+#             )
+#             if form_data.publication_name:
+#                 file.publication = Publication(
+#                     name=form_data.publication_name,
+#                     date=form_data.publication_date,  # date conversion is done in Publication class
+#                     url=form_data.publication_url,
+#                 )
 
-            n_modified, n_matched = await add_project_file_and_data(
-                db, project_id, file
-            )
-            if n_modified == 0:
-                raise HTTPException(
-                    status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Unable to add file to project",
-                )
-            return {
-                "hash_file": file.hash,
-                "file_size": file.size,
-                "file_ext": file.extention,
-            }
-        else:
-            raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unable to save file"
-            )
-    raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="You must provide a file")
+#             n_modified, n_matched = await add_project_file_and_data(
+#                 db, project_id, file
+#             )
+#             if n_modified == 0:
+#                 raise HTTPException(
+#                     status.HTTP_500_INTERNAL_SERVER_ERROR,
+#                     detail="Unable to add file to project",
+#                 )
+#             return {
+#                 "hash_file": file.hash,
+#                 "file_size": file.size,
+#                 "file_ext": file.extention,
+#             }
+#         else:
+#             raise HTTPException(
+#                 status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unable to save file"
+#             )
+#     raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="You must provide a file")
 
 
 @router.get("/project/query/", tags=["projects"])
@@ -644,10 +647,39 @@ async def form_add_project_file(
     return result
 
 
-@router.get("/project/test/", tags=["projects"], status_code=status.HTTP_200_OK)
-async def test_query(test: Optional[List[Union[str, float]]] = Query(None)) -> dict:
-    print(test)
-    return test
+# DELETE FILE FROM PROJECT providing FILE HASH
+# http://0.0.0.0:8001/project/add_file_and_property/558d97b88b1ad6f80a3bf40ee8099886fcf5725c
+@router.delete(
+    "/project/add/file/{hash_file}",
+    tags=["projects"],
+    status_code=status.HTTP_200_OK,
+)
+async def delete_project_file_by_hash(
+    hash_file: str,
+    db: AsyncIOMotorClient = Depends(get_database),
+    # COMMENT user:...below TO REMOVE AUTHORIZATION ~~~~~~~~~~~~~~~
+    user: UserAuth = Depends(current_user),
+) -> dict:
+    # retrieve documents uploaded by the logged in user having the provided hash file
+    listDocs = await check_documents_having_files_with_hash(
+        db, user.email, user.affiliation, hash_file
+    )
+    if len(listDocs) != 0:
+        ext = listDocs[0]["files"][0]["extention"]
+        size = listDocs[0]["files"][0]["size"]
+        file_hash_and_ext = hash_file + "." + ext
+        # FIRST delete file from FileSystem if exists
+        isRemoved = await delete_file_with_hash(file_hash_and_ext, upload_dir)
+        for doc in listDocs:
+            n_modified, n_matched = await pull_files_from_documents(
+                db, doc["_id"], hash_file
+            )
+        msg = f"File {file_hash_and_ext} ({size}), removed from project"
+        if isRemoved:
+            msg += " and from File System"
+        return {"status": msg}
+    else:
+        return {"status": f"No file with hash:{hash_file} was found on DB"}
 
 
 # https://github.com/tiangolo/fastapi/issues/362
