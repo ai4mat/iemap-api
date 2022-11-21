@@ -1,9 +1,10 @@
+import mimetypes
 import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from datetime import datetime
 from os import getcwd, path
 from logging.config import dictConfig
-from fastapi import FastAPI, Request, Response, status, HTTPException
+from fastapi import FastAPI, Request, Depends, status, HTTPException
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -43,6 +44,10 @@ from core.log_config import logging_config
 # configure logging using a dictionary from core.log_config
 dictConfig(logging_config)
 
+
+# NECESSARY TO HANDLE FASTAPI_USERS
+from db.mongodb_utils import UserAuth
+from models.users import fastapi_users
 
 # define FASTAPI application
 app = FastAPI(
@@ -130,12 +135,14 @@ async def read_item(request: Request):
     return templates.TemplateResponse("form.html", {"request": request})
 
 
+current_user = fastapi_users.current_user(verified=True)
 # TO SERVE FILES
 # http://0.0.0.0:8001/file/hashfile
-
-
 @app.api_route("/file/{name_file}", methods=["GET"])
-def get_file(name_file: str):
+def get_file(
+    name_file: str,
+    user: UserAuth = Depends(current_user),
+):
     """Download file from server
 
     Args:
@@ -155,7 +162,8 @@ def get_file(name_file: str):
     # print(file_path)
     isExisting = file_path.is_file()
     if isExisting:
-        return FileResponse(file_path)
+        mtype, _ = mimetypes.guess_type(file_path)
+        return FileResponse(file_path)  # , media_type=mtype)
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found!!"
