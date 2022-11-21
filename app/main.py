@@ -10,6 +10,8 @@ from fastapi.staticfiles import StaticFiles
 # from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from core.utils import get_dir_uploaded
+
 # from starlette.exceptions import HTTPException
 # from starlette.middleware.cors import CORSMiddleware
 
@@ -145,9 +147,15 @@ def get_file(name_file: str):
     Returns:
         stream: binary data of file
     """
-    file_full_path = getcwd() + "/uploaded/" + name_file
-    if path.exists(file_full_path):
-        return FileResponse(path=getcwd() + "/uploaded/" + name_file)
+
+    upload_dir = Config.files_dir
+    base_dir = get_dir_uploaded(upload_dir)
+    # path for file to write on file system
+    file_path = base_dir / name_file
+    # print(file_path)
+    isExisting = file_path.is_file()
+    if isExisting:
+        return FileResponse(file_path)
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found!!"
