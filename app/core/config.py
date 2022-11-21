@@ -20,9 +20,10 @@ allowed_mime_types = [
     "application/octet-stream",
     "application/pdf",
     "text/plain",
-    "application/rtf",
     "chemical/x-cif",  # .cif
     "text/x-markdown",
+    "application/rtf",
+    "application/json",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
