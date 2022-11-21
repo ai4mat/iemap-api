@@ -32,3 +32,36 @@ def get_user_projects_base_info(user_email: str, affiliation: str) -> dict:
         },
     ]
     return pipeline
+
+
+def get_proj_having_file_with_given_hash(
+    user_email: str, affiliation: str, hash: str
+) -> dict:
+    pipeline = [
+        {
+            "$match": {
+                "provenance.email": user_email,
+                "provenance.affiliation": affiliation,
+                "files": {"$elemMatch": {"hash": hash}},
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "iemap_id": 1,
+                "files": {
+                    "$filter": {
+                        "input": "$files",
+                        "as": "item",
+                        "cond": {
+                            "$eq": [
+                                "$$item.hash",
+                                hash,
+                            ]
+                        },
+                    }
+                },
+            }
+        },
+    ]
+    return pipeline

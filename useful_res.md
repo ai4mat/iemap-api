@@ -19,7 +19,8 @@
 [Catch `Exception` in fast api globally](https://stackoverflow.com/questions/61596911/catch-exception-in-fast-api-globally)  
 [The Simplest Guide to FastAPI Dependency Injection using Depends](https://progressivecoder.com/fastapi-dependency-injection-using-depends/)  
 [FASTAPI error running UVICORN](https://stackoverflow.com/questions/60819376/fastapi-throws-an-error-error-loading-asgi-app-could-not-import-module-api)  
-[5 Advanced Features of FastAPI You Should Try](https://levelup.gitconnected.com/5-advance-features-of-fastapi-you-should-try-7c0ac7eebb3e)
+[5 Advanced Features of FastAPI You Should Try](https://levelup.gitconnected.com/5-advance-features-of-fastapi-you-should-try-7c0ac7eebb3e)  
+[FastAPI UploadFile is slow compared to Flask](https://stackoverflow.com/questions/65342833/fastapi-uploadfile-is-slow-compared-to-flask/70667530#70667530)
 
 ### JWT Authentication
 

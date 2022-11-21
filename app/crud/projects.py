@@ -9,7 +9,11 @@ from core.config import Config
 
 from models.iemap import Project as IEMAPModel
 from models.iemap import ProjectQueryResult
-from crud.pipelines import get_properties_files, get_user_projects_base_info
+from crud.pipelines import (
+    get_proj_having_file_with_given_hash,
+    get_properties_files,
+    get_user_projects_base_info,
+)
 
 from dateutil.parser import parse
 
@@ -396,6 +400,68 @@ async def get_user_projects(
     pipeline = get_user_projects_base_info(user_email, affiliation)
     result = await coll.aggregate(pipeline).to_list(None)
     return result
+
+
+async def check_documents_having_files_with_hash(
+    conn: AsyncIOMotorClient, user_email: str, affiliation: str, hash_file: str
+) -> dict:
+    """Get documents for the provided user email and affiliation
+       having files with the given hash file
+
+    Args:
+        conn (AsyncIOMotorClient): Motor connection
+        user_email (str): user email (extracted from JWT)
+        affiliation (str): user affilaition (extracted from JWT)
+        hash_file (str): file HASH
+
+    Returns:
+        dict: having fields _id:str, iemap_id:str,
+              files:List[hash:str, name:str, extention:str, size:str, createdAt:Datetime, updatedAt:Datetime]
+    """
+    coll = conn[database_name][ai4mat_collection_name]
+    pipeline = get_proj_having_file_with_given_hash(user_email, affiliation, hash_file)
+    result = await coll.aggregate(pipeline).to_list(None)
+    return result
+
+
+async def pull_files_from_documents(
+    conn: AsyncIOMotorClient, id_doc: ObjectId, hash_file: str
+) -> bool:
+    """_summary_
+
+    Args:
+        conn (AsyncIOMotorClient): _description_
+        hash_file (str): _description_
+
+    Returns:
+        bool: _description_
+    """
+    coll = conn[database_name][ai4mat_collection_name]
+    # pull document from files array and if array field is empty then unset it
+    result = await coll.update_one(
+        {"_id": id_doc},
+        # {"$pull": {"files": {"hash": hash_file}}}
+        [
+            {
+                "$set": {
+                    "files": {
+                        "$filter": {
+                            "input": "$files",
+                            "cond": {"$ne": ["$$this.hash", hash_file]},
+                        }
+                    }
+                }
+            },
+            {
+                "$set": {
+                    "files": {"$cond": [{"$eq": ["$files", []]}, "$$REMOVE", "$files"]}
+                }
+            },
+        ],
+    )
+    # all credits to
+    # https://stackoverflow.com/questions/68984050/unset-array-field-if-it-is-empty-after-pull-in-mongodb
+    return result.modified_count, result.matched_count
 
 
 # https://medium.com/@madhuri.pednekar/handling-mongodb-objectid-in-python-fastapi-4dd1c7ad67cd
