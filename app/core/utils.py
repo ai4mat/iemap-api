@@ -229,6 +229,29 @@ async def rename_file_with_its_hash(
         capture_exception(e)
 
 
+async def delete_file_with_hash(file_hash: str, upload_dir: str) -> bool:
+    """Delete file from FS having the provided hash
+
+    Args:
+        file_hash (str): HASH file to delete
+        upload_dir (str): path folder containing all uploadd files
+    Returns:
+        bool: True if file successfully deleted
+
+    """
+
+    try:
+        path_file_to_delete = get_dir_uploaded(upload_dir) / file_hash
+        if path_file_to_delete.exists():
+            await aiofiles.os.remove(path_file_to_delete)
+            return True
+        else:
+            return False
+    except Exception as e:
+        logger.error(e)
+        capture_exception(e)
+
+
 def get_value_float_or_str(x):
     """Get value as float or string
         first check if value can be correctly converted to float
