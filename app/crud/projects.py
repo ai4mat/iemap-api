@@ -74,27 +74,41 @@ async def add_property_file(
     """Function to add file hash to a property file.
     The document to update is identified by the document's id, and the property file's name.
     """
-    #  {"_id":ObjectId("62752dd88856514dab27dd8e")},
-    # {$set:{"process.properties.$[elem].hash":"hash-2"}},{arrayFilters:[{$and:[{"elem.name":"H2o"},{"elem.type":"2D"}]}]}
-
+    # get collection
     coll = conn[database_name][ai4mat_collection_name]
-
-    result_update_property = await coll.update_one(
+    # update property adding a file field with the hash.extention of file associated
+    rup = await coll.update_one(
         {"_id": ObjectId(id)},
         {
             "$set": {
                 "properties.$[elem].file": fp.hash + "." + fp.extention,
             }
         },
+        # When upsert = True
+        # Creates a new document if no documents match the filter.
+        # Updates a single document that matches the filter.
+        # Defaults to false, which does not insert a new document when no match is found.
         upsert=False,
         array_filters=[{"$and": [{"elem.name": elementName}]}],
     )
-    if result_update_property.modified_count == 1:
-        result_update = await coll.update_one(
-            {"_id": ObjectId(id)}, {"$push": {"files": fp.dict()}}
-        )
+    #  modified_count ==1 means a new property file was inserted
+    #  matched_count ==1 means an existing property file was found
 
-    return result_update_property.modified_count, result_update_property.matched_count
+    newProjFileAdded = False
+    newPropFileUpdateOrInserted = False
+    if rup.modified_count == 1 or rup.matched_count == 1:
+        # first check if a corresponding item in files field exists
+        result = await coll.find(
+            {"_id": ObjectId(id), "files.hash": {"$in": [fp.hash]}}, {"files.hash": 1}
+        ).to_list(None)
+        alreadyExists = True if result != None else False
+        if not alreadyExists:
+            result_update_files = await coll.update_one(
+                {"_id": ObjectId(id)}, {"$push": {"files": fp.dict()}}
+            )
+            newProjFileAdded = result_update_files.modified_count == 1
+    newPropFileUpdateOrInserted = rup.modified_count == 1 or rup.matched_count == 1
+    return newPropFileUpdateOrInserted, newProjFileAdded
 
 
 async def add_project_file(conn: AsyncIOMotorClient, id: str, fp: FileProject):
@@ -477,11 +491,11 @@ async def find_proj_having_file_with_hash(
     conn: AsyncIOMotorClient, hash_file: str
 ) -> int:
     coll = conn[database_name][ai4mat_collection_name]
-    # pull document from files array and if array field is empty then unset it
+
     result = await coll.find(
         {"files": {"$elemMatch": {"hash": hash_file}}}, "_id"
     ).to_list(None)
-    print(result)
+
     num_proj = len(result) if result != None else 0
     return num_proj
 
