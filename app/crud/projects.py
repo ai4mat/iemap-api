@@ -473,6 +473,19 @@ async def pull_files_from_documents(
     return result.modified_count, result.matched_count
 
 
+async def find_proj_having_file_with_hash(
+    conn: AsyncIOMotorClient, hash_file: str
+) -> int:
+    coll = conn[database_name][ai4mat_collection_name]
+    # pull document from files array and if array field is empty then unset it
+    result = await coll.find(
+        {"files": {"$elemMatch": {"hash": hash_file}}}, "_id"
+    ).to_list(None)
+    print(result)
+    num_proj = len(result) if result != None else 0
+    return num_proj
+
+
 # https://medium.com/@madhuri.pednekar/handling-mongodb-objectid-in-python-fastapi-4dd1c7ad67cd
 # https://www.tutorialsteacher.com/mongodb/update-arrays
 # https://www.mongodb.com/docs/manual/reference/operator/update/positional-filtered/#mongodb-update-up.---identifier--
