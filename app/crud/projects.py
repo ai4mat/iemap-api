@@ -140,14 +140,23 @@ async def add_project_file(conn: AsyncIOMotorClient, id: str, fp: FileProject):
     # if a document already exists, number_matched_documents will be 1
 
     # if not filesExists:
-    result_update = await coll.update_one(
-        {"_id": ObjectId(id)}, {"$push": {"files": fp.dict()}}
+    result = await coll.find_one(
+        {"_id": ObjectId(id), "files.hash": {"$in": [fp.hash]}}, {"files.hash": 1}
     )
+    yetExists = True if result != None else False
+    num_docs_updated, number_doc_matched = 0, 0
+    if not yetExists:
+        result_update = await coll.update_one(
+            {"_id": ObjectId(id)},
+            {"$push": {"files": fp.dict()}}
+            # add to arry if not yet present
+            # {"$addToSet": {"files": fp.dict()}},
+        )
 
-    num_docs_updated, number_doc_matched = (
-        result_update.modified_count,
-        result_update.matched_count,
-    )
+        num_docs_updated, number_doc_matched = (
+            result_update.modified_count,
+            result_update.matched_count,
+        )
     return num_docs_updated, number_doc_matched
 
 
