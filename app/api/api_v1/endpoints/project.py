@@ -44,6 +44,7 @@ from crud.projects import (
     check_documents_having_files_with_hash,
     count_projects,
     find_all_project_paginated,
+    find_proj_having_file_with_hash,
     list_project_properties_files,
     list_projects,
     add_property_file,
@@ -681,8 +682,11 @@ async def delete_project_file_by_hash(
         ext = listDocs[0]["files"][0]["extention"]
         size = listDocs[0]["files"][0]["size"]
         file_hash_and_ext = hash_file + "." + ext
-        # FIRST delete file from FileSystem if exists
-        isRemoved = await delete_file_with_hash(file_hash_and_ext, upload_dir)
+        # FIRST check if file belongs to other projects
+        isRemoved = False
+        num_proj = await find_proj_having_file_with_hash(db, hash_file)
+        if num_proj > 0:
+            isRemoved = await delete_file_with_hash(file_hash_and_ext, upload_dir)
         for doc in listDocs:
             n_modified, n_matched = await pull_files_from_documents(
                 db, doc["_id"], hash_file
