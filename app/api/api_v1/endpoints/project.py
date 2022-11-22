@@ -314,18 +314,11 @@ async def create_project_file(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Document not updated",
         )
-    # is None if file is already present on File System
-    # if new_file_name == None:
-    #     #
-    #     raise HTTPException(
-    #         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #         detail="File yet existing, unable to overwite. Please first delete it before replacing it with new content!",
-    #     )
 
 
 # ADD PROPERTY FILE TO PROJECT
 # REQUIRES PROJECT ID, PROPERTY NAME AND PROPERTY TYPE
-# http://0.0.0.0:8001/api/v1/project/add/propertyfile/?project_id=62752dd88856514dab27dd8e&name=temperature
+# http://0.0.0.0:8001/api/v1/project/add/file_property/?project_id=62752dd88856514dab27dd8e&name=temperature
 @router.post("/project/add/file_property/", tags=["projects"])
 async def create_property_file(
     project_id: ObjectIdStr,
@@ -356,7 +349,7 @@ async def create_property_file(
             "file_size": file size in human readable form
         }
     """
-
+    # convert to ObjectId
     id_mongodb = BsonObjectId(project_id)
     # Check file MimeType
     if file.content_type not in Config.allowed_mime_types:
@@ -365,76 +358,52 @@ async def create_property_file(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="No file provided")
     # retrieve file extension
     file_ext = file.filename.split(".")[-1]
-    # file to write path
+    # file to write full path
     file_to_write = get_dir_uploaded(upload_dir) / file.filename
 
     try:
-        f = await run_in_threadpool(open, file_to_write, "wb")
-        await run_in_threadpool(copyfileobj, file.file, f, 1024 * 1024 * 10)
+        chunk_size = 1024 * 1024 * 10
+        fpro = await run_in_threadpool(open, file_to_write, "wb")
+        await run_in_threadpool(copyfileobj, file.file, fpro, chunk_size)
     except Exception as e:
         logger.error(e)
         capture_exception(e)
-        return {"message": "There was an error uploading the file"}
+        return {"message": f"There was an error uploading the file for property {name}"}
     finally:
-        if "f" in locals():
-            await run_in_threadpool(f.close)
+        if "fpro" in locals():
+            await run_in_threadpool(fpro.close)
         await file.close()
 
-    # OLD VERSION
-    # write file to disk in chunks
-    # with open(file_to_write, "wb+") as file_object:
+    new_file_name, wasSavedOnFS = await rename_file_with_its_hash(
+        file_to_write, file_ext, upload_dir
+    )
 
-    #     # SLOWER VERSION BUT DOES NOT LOAD ENTIRE FILE IN MEMORY
-    #     async with aiofiles.open(file_to_write, "wb") as out_file:
-    #         # read file all in memory before saving
-    #         content = await file.read()
-    #         # async read chunk
-    #         # while content := await file.read(
-    #         #     Config.files_chunk_size
-    #         # ):
-    #         await out_file.write(content)  # async write chunk
-    # content = file.file.read()
-    # structure, distinct_species, lattice = None, None, None
-    # if file_ext == "cif":
-    #     structure, distinct_species, lattice = parse_cif(file_to_write)
-    # h.update(content)
-    # hash = h.hexdigest()
-    # file_object.write(file.file.read())
-    # compute file hash & rename file on FileSystem accordingly
-    new_file_name = await rename_file_with_its_hash(file_to_write, file_ext, upload_dir)
+    # if new_file_name != None:
+    # extract HASH part only
+    hash = str(new_file_name).split("/")[-1].split(".")[0]
+    str_file_size = get_str_file_size(new_file_name)
 
-    if new_file_name != None:
-        # extract HASH part only
-        hash = str(new_file_name).split("/")[-1].split(".")[0]
-        str_file_size = get_str_file_size(new_file_name)
-
-        fp = FileProject(
-            hash=hash,
-            # if file_name is not passed as property in url endpoint then save file name in DB
-            # as the name of uploaded file
-            name=name.split(".")[0] if name else file.filename,
-            extention=file_ext,
-            size=str_file_size,
-        )
-        modified_count, matched_count = await add_property_file(
-            db, id_mongodb, fp, name
-        )
-        if modified_count == 0:
-            await aiofiles.os.remove(new_file_name)
-            raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Unable to add property file",
-            )
-        return {
-            "file_name": f"{file.filename}",
-            "file_hash": f"{hash}",
-            "file_size": str_file_size,
-        }
-    if new_file_name == None:
+    fp = FileProject(
+        hash=hash,
+        # if file_name is not passed as property in url endpoint then save file name in DB
+        # as the name of uploaded file
+        name=name.split(".")[0] if name else file.filename,
+        extention=file_ext,
+        size=str_file_size,
+    )
+    isPropFile, isProjFileAdded = await add_property_file(db, id_mongodb, fp, name)
+    if not isPropFile:
+        await aiofiles.os.remove(new_file_name)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="File yet existing, unable to overwite. Please first delete it before replacing it with new content!",
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to add property file",
         )
+    return {
+        "uploaded": isProjFileAdded,
+        "file_name": f"{file.filename}",
+        "file_hash": f"{hash}",
+        "file_size": str_file_size,
+    }
 
 
 # @router.get("/files/{name_file}", tags=["projects"])
