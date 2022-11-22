@@ -272,41 +272,54 @@ async def create_project_file(
     #     capture_exception(e)
 
     # compute file hash & rename file on FileSystem accordingly
-    new_file_name = await rename_file_with_its_hash(file_to_write, file_ext, upload_dir)
+    new_file_name, wasSavedOnFS = await rename_file_with_its_hash(
+        file_to_write, file_ext, upload_dir
+    )
 
-    if new_file_name != None:
-        # extract HASH part only
-        hash = str(new_file_name).split("/")[-1].split(".")[0]
-        # get file size
-        file_size = get_str_file_size(new_file_name)
-        fp = FileProject(
-            hash=hash,
-            # if file_name is not passed as property in url endpoint then save file name in DB
-            # as the name of uploaded file
-            name=file_name.split(".")[0] if file_name else file.filename,
-            extention=file_ext,
-            size=file_size,
-        )
-        # add file to docoment in DB having id == project_id
-        update_modified_count, update_matched_count = await add_project_file(
-            db, id_mongodb, fp
-        )
-        if update_modified_count > 0:
-            return {
-                "file_name": fp.name,
-                "file_hash": hash,
-                "file_size": file_size,
-            }
-        if update_modified_count == 0:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Document not updated",
-            )
-    if new_file_name == None:
+    # if new_file_name != None:
+    # extract HASH part only
+    hash = str(new_file_name).split("/")[-1].split(".")[0]
+    # get file size
+    file_size = get_str_file_size(new_file_name)
+    fp = FileProject(
+        hash=hash,
+        # if file_name is not passed as property in url endpoint then save file name in DB
+        # as the name of uploaded file
+        name=file_name.split(".")[0] if file_name else file.filename,
+        extention=file_ext,
+        size=file_size,
+    )
+    # add file to docoment in DB having id == project_id
+    # wasSavedOnFS means that file is already present on File System
+    update_modified_count, update_matched_count = await add_project_file(
+        db, id_mongodb, fp
+    )
+    if update_modified_count > 0:
+        return {
+            "uploaded": True,
+            "file_name": fp.name,
+            "file_hash": hash,
+            "file_size": file_size,
+        }
+    if update_modified_count == 0 and update_matched_count == 0:
+        return {
+            "uploaded": False,
+            "file_name": fp.name,
+            "file_hash": hash,
+            "file_size": file_size,
+        }
+    if update_modified_count == 0:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="File yet existing, unable to overwite. Please first delete it before replacing it with new content!",
+            detail="Document not updated",
         )
+    # is None if file is already present on File System
+    # if new_file_name == None:
+    #     #
+    #     raise HTTPException(
+    #         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #         detail="File yet existing, unable to overwite. Please first delete it before replacing it with new content!",
+    #     )
 
 
 # ADD PROPERTY FILE TO PROJECT
