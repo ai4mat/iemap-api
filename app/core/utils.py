@@ -207,7 +207,7 @@ async def rename_file_with_its_hash(
         upload_dir (str): name folder where save data
     Returns:
         str|None: new file name (hash+original extention) or None if file yet existing (no overwrite allowed)
-
+        bool: True if a new file was saved on File System and False if file already on File System
     """
     # compute file hashing (data saved in chunk)
     # hash computed after saving file with its original name
@@ -218,12 +218,12 @@ async def rename_file_with_its_hash(
         if not new_file_name.exists():
             # await rename(file_to_write, new_file_name)
             rename(file_to_write, new_file_name)
-            return new_file_name
+            return new_file_name, True
         else:
             # delete original file before returning None, i.e. no file uploaded
             # await remove(file_to_write)
             remove(file_to_write)
-            return None
+            return new_file_name, False
     except Exception as e:
         logger.error(e)
         capture_exception(e)
