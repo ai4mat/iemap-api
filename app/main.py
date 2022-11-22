@@ -141,6 +141,7 @@ current_user = fastapi_users.current_user(verified=True)
 @app.api_route("/file/{name_file}", methods=["GET"])
 def get_file(
     name_file: str,
+    # comment row below to remove authentication for this endpoint
     user: UserAuth = Depends(current_user),
 ):
     """Download file from server
