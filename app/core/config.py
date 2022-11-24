@@ -20,7 +20,8 @@ allowed_mime_types = [
     "application/octet-stream",
     "application/pdf",
     "text/plain",
-    "chemical/x-cif",  # .cif
+    "chemical/x-cif",
+    "application/vnd.multiad.creator.cif",  # .cif
     "text/x-markdown",
     "application/rtf",
     "application/json",
