@@ -34,7 +34,7 @@ kill:
 	@docker ps | grep $(APP_NAME):$(TAG) | awk '{print $$1}' | xargs docker rm -f
 
 clean:
-	@echo '🧹	Cleaning all: killing container, removing eventually dead containers and remove images...'
+	@echo '🧹	Cleaning all: kill container, remove eventually dead containers and remove images...'
 	@docker ps -a | grep $(APP_NAME) | awk '{print $$1}' | xargs -r docker rm -f
 	@echo 'Removing container image...'
 	@docker images | grep $(APP_NAME) | awk '{print $$3}' | xargs docker rmi
