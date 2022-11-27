@@ -19,7 +19,8 @@
 [Catch `Exception` in fast api globally](https://stackoverflow.com/questions/61596911/catch-exception-in-fast-api-globally)  
 [The Simplest Guide to FastAPI Dependency Injection using Depends](https://progressivecoder.com/fastapi-dependency-injection-using-depends/)  
 [FASTAPI error running UVICORN](https://stackoverflow.com/questions/60819376/fastapi-throws-an-error-error-loading-asgi-app-could-not-import-module-api)  
-[5 Advanced Features of FastAPI You Should Try](https://levelup.gitconnected.com/5-advance-features-of-fastapi-you-should-try-7c0ac7eebb3e)
+[5 Advanced Features of FastAPI You Should Try](https://levelup.gitconnected.com/5-advance-features-of-fastapi-you-should-try-7c0ac7eebb3e)  
+[FastAPI UploadFile is slow compared to Flask](https://stackoverflow.com/questions/65342833/fastapi-uploadfile-is-slow-compared-to-flask/70667530#70667530)
 
 ### JWT Authentication
 
@@ -91,7 +92,8 @@
 >  [PyDantic datamodel code generator](https://pydantic-docs.helpmanual.io/datamodel_code_generator/)  
 > [Pydantic](https://pydantic.org/)  
 > [Pydantic Video Tutorial](https://youtu.be/Vj-iU-8_xLs)  
-> [Validators vs Custom data types](https://towardsdev.com/pydantic-validators-v-s-custom-data-type-2c65c6402829)
+> [Validators vs Custom data types](https://towardsdev.com/pydantic-validators-v-s-custom-data-type-2c65c6402829)  
+> [How can we use default_factory in a Pydantic field?](https://medium.com/@wucean/how-can-we-use-default-factory-in-a-pydantic-field-3c5d62f624d6)
 
 #### POETRY
 

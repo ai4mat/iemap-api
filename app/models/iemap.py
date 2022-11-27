@@ -4,10 +4,10 @@ from enum import Enum
 
 
 from bson.objectid import ObjectId as BsonObjectId
-from typing import Annotated, List, Union, Optional, Type
+from typing import Annotated, List, Union, Optional, Type, Tuple
 import inspect
 import json
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, SecretStr, Field, validator, create_model, EmailStr
 from pydantic.class_validators import root_validator
 from fastapi import Form
 from uuid import uuid4
@@ -83,15 +83,17 @@ class Lattice(BaseModel):
 
 
 class InputMaterial(BaseModel):
-    lattice: Lattice
-    sites: str
-    species: str
+    lattice: Optional[Lattice]
+    sites: List[List[float]]
+    species: List[str]
+    cell: List[List[float]]
 
 
 class OutputMaterial(BaseModel):
-    lattice: Lattice
-    sites: str
-    species: str
+    lattice: Optional[Lattice]
+    sites: List[List[float]]
+    species: List[str]
+    cell: List[List[float]]
 
 
 class Material(BaseModel):
@@ -162,11 +164,11 @@ class fileType(Enum):
 
 class FileProject(BaseModel):
     hash: Optional[str]
-    description: str
+    # description: str
     name: str
     extention: str
-    type: fileType
-    isProcessed: bool
+    # type: fileType
+    # isProcessed: bool
     size: Optional[str]
     createdAt: Annotated[
         datetime, Field(default_factory=lambda: datetime.now().utcnow())
@@ -188,15 +190,21 @@ def validate_datetime(cls, values):
 
 class newProject(BaseModel):
     identifier: Optional[str]
-    iemap_id: Optional[str] = "iemap-" + uuid4().hex[:6].upper()
+    iemap_id: str=None 
     provenance: Optional[Provenance]
     project: Project
     process: Process
     material: Material
     parameters: List[Parameter]
     properties: List[Property]
-    files: Optional[List[FileProject]] = None
+    # files: Optional[List[FileProject]] = None
     _v: Optional[str] = Field(default="1_0")
+
+    # this define a default value for iemap_id if not provided
+    # alternatively use Field with default_factory or PrivateAttr with default_factory
+    @validator("iemap_id", pre=True, always=True)
+    def set_id(cls, v):
+        return v or "iemap-" + str(uuid4())[:6]
 
     class Config:
         validate_assignment = True
@@ -206,6 +214,57 @@ class newProject(BaseModel):
 class newProjectResponse(BaseModel):
     inserted_id: PydanticObjectId
 
+
+class Parameters(Parameter):
+    files: Optional[List[FileProject]]
+
+
+class Properties(Property):
+    file: Optional[str]
+
+
+class ProvenanceNoEmail(Provenance):
+    email: Optional[SecretStr]
+
+
+class ProjectQueryResult(BaseModel):
+    identifier: Optional[str]
+    iemap_id: Optional[str]
+    provenance: Optional[ProvenanceNoEmail]
+    project: Optional[Project]
+    process: Optional[Process]
+    material: Optional[Material]
+    parameters: Optional[List[Parameters]]
+    properties: Optional[List[Properties]]
+    files: Optional[List[FileProject]]
+
+
+# Put your query arguments in this dict
+query_params = {
+    "id": (str, None),
+    "fields_output": (str, "all"),
+    "affiliation": (str, None),
+    "project_name": (str, None),
+    "provenance_email": (EmailStr, None),
+    "publication_dates": (str, None),
+    "date_publication": (datetime, None),
+    "material_formula": (str, None),
+    "material_all_elements": (str, None),
+    "material_any_element": (str, None),
+    "iemap_id": (str, None),
+    "isExperiment": (bool, None),
+    "simulationCode": (str, None),
+    "experimentInstrument": (str, None),
+    "simulationMethod": (str, None),
+    "experimentMethod": (str, None),
+    "parameterName": (str, None),
+    "parameterValue": (Union[str, float], None),
+    "propertyName": (str, None),
+    "propertyValue": (Union[str, float], None),
+    "fields": (str, None),
+}
+
+queryModel = create_model("Query", **query_params)
 
 # def as_form(cls: Type[BaseModel]):
 #     new_parameters = []
@@ -232,6 +291,15 @@ class newProjectResponse(BaseModel):
 #     as_form_func.__signature__ = sig  # type: ignore
 #     setattr(cls, "as_form", as_form_func)
 #     return cls
+
+
+class userProjectsResponse(BaseModel):
+    id:PydanticObjectId
+    iemap_id:str
+    project_name: str
+    date_creation: datetime
+    experiment: bool
+    material: str
 
 
 def as_form(cls: Type[BaseModel]):

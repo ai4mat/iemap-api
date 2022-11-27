@@ -15,12 +15,19 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # one week
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 allowed_mime_types = [
     "text/csv",
-    # "application/zip",
-    "application/octet-stream",  # .cif
+    "application/x-zip-compressed",
+    "application/zip-compressed",
+    "application/octet-stream",
     "application/pdf",
     "text/plain",
     "chemical/x-cif",
+    "application/vnd.multiad.creator.cif",  # .cif
+    "text/x-markdown",
+    "application/rtf",
+    "application/json",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]
 
 path_dot_env = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../.env")
@@ -47,12 +54,15 @@ class Config(object):
     jwt_secret_key = config["JWT_SECRET_KEY"]
     jwt_algorithm = config["JWT_ALGORITHM"]
     jwt_token_prefix = "Token"
-    jwt_lifetime = int(config["JWT_LIFETIME"]) if config.get("JWT_LIFETIME") else 3600
+    jwt_lifetime = (
+        int(config["JWT_LIFETIME"]) if config.get("JWT_LIFETIME") else 3600 * 24
+    )  # 24h
     access_token_expire_minutes = 60 * 24 * 7  # one week
     app_name = config["APP_NAME"]
     allowed_hosts = CommaSeparatedStrings(config.get("ALLOWED_HOSTS", "*"))
     api_v1_str = config["API_V1_STR"]
     files_dir = config["FILESDIR"]
+    files_chunk_size = int(config.get("FILES_CHUNK_SIZE", 1024 * 1024 * 10))
     allowed_mime_types = allowed_mime_types
     enable_onpremise_auth = bool(config["ENABLE_ONPREMISE_AUTH"] == "True")
     secrete_on_premise_auth = config["SECRET_ONPREMISE_AUTH"]

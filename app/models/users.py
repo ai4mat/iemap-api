@@ -1,7 +1,7 @@
 from typing import Optional
-
 from beanie import PydanticObjectId
 from fastapi import Depends, Request
+from starlette.datastructures import URL
 from fastapi_users import BaseUserManager, FastAPIUsers
 from fastapi_users.authentication import (
     AuthenticationBackend,
@@ -11,8 +11,16 @@ from fastapi_users.authentication import (
 )
 from fastapi_users.db import BeanieUserDatabase, ObjectIDIDMixin
 from db.mongodb_utils import UserAuth, get_user_db
-from core.smtp_email import Email
+from core.smtp_email import readVerifyMailTemplate, send_mail_async
 from core.config import Config
+
+from fastapi_users.manager import BaseUserManager
+from fastapi_users import exceptions
+from fastapi_users.jwt import generate_jwt
+from pathlib import Path
+
+from datetime import datetime
+from fastapi.security import OAuth2PasswordRequestForm
 
 SECRET = Config.secrete_on_premise_auth
 
@@ -21,19 +29,64 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
 
+    async def authenticate(
+        self, credentials: OAuth2PasswordRequestForm
+    ) -> Optional[UserAuth]:
+        user = await super().authenticate(credentials)
+        if user is not None:
+            user.last_login = datetime.now().utcnow()
+            await user.save()
+        return user
+
     async def on_after_register(
-        self, user: UserAuth, request: Optional[Request] = None
+        self,
+        user: UserAuth,
+        request: Optional[Request] = None,
     ):
-        # await user.update({"$set": {"is_active": False}})
-        print(f"User {user.id} has registered.")
+        # CHECK IF USER IS ACTIVE AND NOT ALREADY VERIFIED
+        # THEN GENERATE TEMPORARY TOKEN AND EMIT on_after_request_verify
+        if not user.is_active:
+            raise exceptions.UserInactive()
+        if user.is_verified:
+            raise exceptions.UserAlreadyVerified()
+
+        token_data = {
+            "user_id": str(user.id),
+            "email": user.email,
+            "aud": self.verification_token_audience,
+        }
+        token = generate_jwt(
+            token_data,
+            self.verification_token_secret,
+            self.verification_token_lifetime_seconds,
+        )
+
+        if user is not None:
+            user.created_at = datetime.now().utcnow()
+            await user.save()
+
+        # retrieve requested url to use for link to embend in email sent to user
+        strBaseRequest = str(request.url).split("auth/register")[0]
+        strEndpointVerifyByEmail = "auth/verify-email/"
+        strLinkVerifyEmail = strBaseRequest + strEndpointVerifyByEmail + token
+
+        # send email to user to verify his/her email
+        # eventually add other email to list to notify an administrator
+        pathVerifyEmail = (
+            "./app/templates/mail_template.html"
+            if not "app" in str(Path.cwd()).split("/")
+            else "./templates/mail_template.html"
+        )
+        textMail = await readVerifyMailTemplate(pathVerifyEmail, strLinkVerifyEmail)
+        await send_mail_async(
+            [user.email], "Finish registration to IEMAP REST API service", textMail
+        )
 
     async def on_after_forgot_password(
         self, user: UserAuth, token: str, request: Optional[Request] = None
     ):
 
         print(f"User {user.id} has forgot their password. Reset token: {token}")
-        em = Email()
-        em.send_verify_email([user.email], token)
 
     async def on_after_request_verify(
         self, user: UserAuth, token: str, request: Optional[Request] = None
@@ -41,13 +94,16 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
         # retrieve requested url to use for link to embend in email sent to user
         strBaseRequest = str(request.url).split("auth/request-verify-token")[0]
         strEndpointVerifyByEmail = "auth/verify-email/"
-        em = Email()
-        # send email to user to verify his/her email
-        # eventually add other email to list to notify an administrator
-        em.send_verify_email(
-            [user.email], strBaseRequest + strEndpointVerifyByEmail, token
+        strLinkVerifyEmail = strBaseRequest + strEndpointVerifyByEmail + token
+        pathVerifyEmail = (
+            "./app/templates/mail_template.html"
+            if not "app" in str(Path.cwd()).split("/")
+            else "./templates/mail_template.html"
         )
-        print(f"Verification requested for user {user.id}. Verification token: {token}")
+        textMail = await readVerifyMailTemplate(pathVerifyEmail, strLinkVerifyEmail)
+        await send_mail_async(
+            [user.email], "Finish registration to IEMAP REST API service", textMail
+        )
 
 
 async def get_user_manager(user_db: BeanieUserDatabase = Depends(get_user_db)):

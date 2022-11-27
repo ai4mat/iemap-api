@@ -1,59 +1,86 @@
-# Import modules
-from os import link
-import smtplib, ssl
-from datetime import date, datetime
+import aiofiles
+import aiosmtplib
 
-## email.mime subclasses
+
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from core.config import Config
 
-# Connect to the Gmail SMTP server and Send Email
-context = ssl.SSLContext(ssl.PROTOCOL_TLS)
-# ssl.create_default_context()
+MAIL_PARAMS = {
+    "TLS": True,
+    "host": Config.smtp_server,
+    "password": Config.smtp_pwd,
+    "user": Config.smtp_from,
+    "port": 587,
+}
 
-# date_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+async def send_mail_async(to, subject, text, **params):
+    """Send an outgoing email with the given parameters.
+
+    :param sender: From whom the email is being sent
+    :type sender: str
+
+    :param to: A list of recipient email addresses.
+    :type to: list
+
+    :param subject: The subject of the email.
+    :type subject: str
+
+    :param text: The text of the email.
+    :type text: str
+
+    :param textType: Mime subtype of text, defaults to 'plain' (can be 'html').
+    :type text: str
+
+    :param params: An optional set of parameters. (See below)
+    :type params; dict
+
+    Optional Parameters:
+    :cc: A list of Cc email addresses.
+    :bcc: A list of Bcc email addresses.
+    """
+
+    # Default Parameters
+    cc = params.get("cc", [])
+    bcc = params.get("bcc", [])
+    mail_params = params.get("mail_params", MAIL_PARAMS)
+
+    # Prepare Message
+    msg = MIMEMultipart()
+    msg.preamble = subject
+    msg["Subject"] = subject
+    msg["From"] = MAIL_PARAMS["user"]
+    msg["To"] = ", ".join(to)
+    if len(cc):
+        msg["Cc"] = ", ".join(cc)
+    if len(bcc):
+        msg["Bcc"] = ", ".join(bcc)
+
+    msg.attach(MIMEText(text, "html"))
+
+    # Contact SMTP server and send Message
+    # sender=MAIL_PARAMS["user"]
+    host = mail_params.get("host", Config.smtp_server)
+    isSSL = mail_params.get("SSL", False)
+    isTLS = mail_params.get("TLS", False)
+    port = mail_params.get("port", 465 if isSSL else 25)
+    smtp = aiosmtplib.SMTP(hostname=host, port=port, use_tls=isSSL)
+    await smtp.connect()
+    if isTLS:
+        await smtp.starttls()
+    if "user" in mail_params:
+        await smtp.login(mail_params["user"], mail_params["password"])
+    await smtp.send_message(msg)
+    await smtp.quit()
 
 
-class Email:
+async def readVerifyMailTemplate(filename, linkToVerifyEndpoint):
+    async with aiofiles.open(filename, mode="r") as f:
+        contents = await f.read()
+        link = f'href="{linkToVerifyEndpoint}"'
+        contents = contents.replace('href="{{}}"', link)
+        return contents
 
-    # Create a MIMEMultipart class,
-    # and set up the From, To, Subject fields
-    email_message = MIMEMultipart()
-    # Convert it as a string
-    email_text = email_message.as_string()
-    email_message["Subject"] = f"Activate your account"
-    email_from = Config.smtp_from
-    password = Config.smtp_pwd
-    email_message["From"] = email_from
 
-    # defining constructor
-    def __init__(self):
-        pass
-
-    def send(self, list_to_email):
-        with smtplib.SMTP(Config.smtp_server, 587) as server:
-            server.starttls()
-            server.login(self.email_from, self.password)
-            server.sendmail(
-                self.email_from, list_to_email, self.email_message.as_string()
-            )
-
-    def send_verify_email(self, list_to_email: list, base_url: str, token: str):
-
-        # Define the HTML document
-        html_template_verify_account = f"""
-            <html>
-                <body>
-                    <h1>Please verify your account</h1>
-                    <p> Click the following <a href="{base_url}{token}"> link </a> to verify your account.</p>
-                    
-                </body>
-            </html>
-            """
-
-        # self.email_message["To"] = ",".join(list_to_email)
-        self.email_message["Subject"] = "Activate your account"
-        # Attach the html doc defined earlier, as a MIMEText html content type to the MIME message
-        self.email_message.attach(MIMEText(html_template_verify_account, "html"))
-        self.send(list_to_email)
+# https://stackoverflow.com/questions/60224850/send-mail-python-asyncio#60226128

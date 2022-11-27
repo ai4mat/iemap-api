@@ -10,7 +10,7 @@ from db.mongodb_utils import UserAuth
 # )
 
 # from core.jwt import get_current_user_authorizer
-from core.auth import JWTBearer, signJWT, decodeJWT
+from core.auth import JWTBearer, signJWT  # , decodeJWT
 from models.user import UserBase, User
 from crud.health import checkDB
 from db.mongodb import AsyncIOMotorClient, get_database

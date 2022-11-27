@@ -1,11 +1,21 @@
-from models.iemap import FileProject, Property
+from typing import List
+
+from core.utils import get_value_float_or_str
+from models.iemap import FileProject, Property, queryModel
 
 from db.mongodb import AsyncIOMotorClient
 from bson.objectid import ObjectId
 from core.config import Config
 
 from models.iemap import Project as IEMAPModel
-from crud.pipelines import get_properties_files
+from models.iemap import ProjectQueryResult
+from crud.pipelines import (
+    get_proj_having_file_with_given_hash,
+    get_properties_files,
+    get_user_projects_base_info,
+)
+
+from dateutil.parser import parse
 
 database_name, ai4mat_collection_name = (Config.mongo_db, Config.mongo_coll)
 
@@ -58,45 +68,50 @@ async def list_project_properties_files(
 async def add_property_file(
     conn: AsyncIOMotorClient,
     id: str,
-    fileHash: str,
-    strFileSize: str,
-    strFileExt: str,
+    fp: FileProject,
     elementName: str,
-    elementType: str,
 ):
     """Function to add file hash to a property file.
     The document to update is identified by the document's id, and the property file's name.
     """
-    #  {"_id":ObjectId("62752dd88856514dab27dd8e")},
-    # {$set:{"process.properties.$[elem].hash":"hash-2"}},{arrayFilters:[{$and:[{"elem.name":"H2o"},{"elem.type":"2D"}]}]}
-
+    # get collection
     coll = conn[database_name][ai4mat_collection_name]
-
-    result_update = await coll.update_one(
+    # update property adding a file field with the hash.extention of file associated
+    rup = await coll.update_one(
         {"_id": ObjectId(id)},
         {
             "$set": {
-                "process.properties.$[elem].file.hash": fileHash,
-                "process.properties.$[elem].file.size": strFileSize,
-                "process.properties.$[elem].file.extention": strFileExt,
+                "properties.$[elem].file": fp.hash + "." + fp.extention,
             }
         },
+        # When upsert = True
+        # Creates a new document if no documents match the filter.
+        # Updates a single document that matches the filter.
+        # Defaults to false, which does not insert a new document when no match is found.
         upsert=False,
-        array_filters=[
-            {"$and": [{"elem.name": elementName}, {"elem.type": elementType}]}
-        ],
+        array_filters=[{"$and": [{"elem.name": elementName}]}],
     )
-    return result_update.modified_count
+    #  modified_count ==1 means a new property file was inserted
+    #  matched_count ==1 means an existing property file was found
+
+    newProjFileAdded = False
+    newPropFileUpdateOrInserted = False
+    if rup.modified_count == 1 or rup.matched_count == 1:
+        # first check if a corresponding item in files field exists
+        result = await coll.find(
+            {"_id": ObjectId(id), "files.hash": {"$in": [fp.hash]}}, {"files.hash": 1}
+        ).to_list(None)
+        alreadyExists = True if result != None else False
+        if not alreadyExists:
+            result_update_files = await coll.update_one(
+                {"_id": ObjectId(id)}, {"$push": {"files": fp.dict()}}
+            )
+            newProjFileAdded = result_update_files.modified_count == 1
+    newPropFileUpdateOrInserted = rup.modified_count == 1 or rup.matched_count == 1
+    return newPropFileUpdateOrInserted, newProjFileAdded
 
 
-async def add_project_file(
-    conn: AsyncIOMotorClient,
-    id: str,
-    fileHash: str,
-    fileSize: str,
-    fileExt: str,
-    fileName: str,
-):
+async def add_project_file(conn: AsyncIOMotorClient, id: str, fp: FileProject):
     """# Function to add file to PROJECT
     (using filne name hash and original extention)
     The document to update is identified by the mdocuent's id, and file's name and extention.
@@ -105,10 +120,7 @@ async def add_project_file(
     -----------
         conn: AsyncIOMotorClient - Motor MongoDB client connection
         id: str - MongoDB document's id (ObjectId) to update
-        fileHash: str - file hash
-        fileSize: str - file size
-        fileExt: str - file extention
-        fileName: str - file name
+        fp: FileProject
 
     Returns:
     --------
@@ -120,26 +132,45 @@ async def add_project_file(
 
     coll = conn[database_name][ai4mat_collection_name]
 
-    result_update = await coll.update_one(
-        {"_id": ObjectId(id)},
-        {
-            "$set": {
-                "files.$[elem].hash": fileHash,
-                "files.$[elem].size": fileSize,
-                "files.$[elem].extention": fileExt,
-            }
-        },
-        upsert=False,
-        array_filters=[
-            {"$and": [{"elem.name": fileName}, {"elem.extention": fileExt}]}
-        ],
-    )
+    # first check if field exist and is not null
+    # if exist than Add element to array, otherwise create array field with one element
+    # filesExists = await coll.find_one({"_id": ObjectId(id), "files": {"$ne": None}})
+    # result_update = None
+    # if filesExists:
+    #     result_update = await coll.update_one(
+    #         {"_id": ObjectId(id)},
+    #         {
+    #             "$set": {
+    #                 "files.$[elem].hash": fp.hash,
+    #                 "files.$[elem].size": fp.size,
+    #                 "files.$[elem].extention": fp.extention,
+    #             }
+    #         },
+    #         upsert=False,
+    #         array_filters=[
+    #             {"$and": [{"elem.name": fp.name}, {"elem.extention": fp.extention}]}
+    #         ],
+    #     )
     # if a document already exists, number_matched_documents will be 1
-    num_docs_updated, number_doc_matched = (
-        result_update.modified_count,
-        result_update.matched_count,
-    )
 
+    # if not filesExists:
+    result = await coll.find_one(
+        {"_id": ObjectId(id), "files.hash": {"$in": [fp.hash]}}, {"files.hash": 1}
+    )
+    yetExists = True if result != None else False
+    num_docs_updated, number_doc_matched = 0, 0
+    if not yetExists:
+        result_update = await coll.update_one(
+            {"_id": ObjectId(id)},
+            {"$push": {"files": fp.dict()}}
+            # add to arry if not yet present
+            # {"$addToSet": {"files": fp.dict()}},
+        )
+
+        num_docs_updated, number_doc_matched = (
+            result_update.modified_count,
+            result_update.matched_count,
+        )
     return num_docs_updated, number_doc_matched
 
 
@@ -288,6 +319,185 @@ async def find_all_project_paginated(
     result = await coll.find(paginated_query).limit(limit).sort([sort]).to_list(None)
     next_key = next_key_fn(result)
     return result, next_key
+
+
+async def exec_query(conn: AsyncIOMotorClient, qp: queryModel):
+
+    get_affiliation = lambda x: x.affiliation.split(",") if x.affiliation else None
+    get_dates = (
+        lambda x: {"$gte": parse(x[0]), "$lte": parse(x[1])}
+        if len(x) > 1
+        else {"$gte": parse(x[0])}
+    )
+
+    get_list_elements = lambda x: list(x.split(",")) if x else None
+
+    query = {
+        "_id" if qp.id else None: ObjectId(qp.id),
+        "provenance.affiliation"
+        if qp.affiliation
+        else None: {"$in": get_affiliation(qp)},
+        "project.name" if qp.project_name else None: qp.project_name,
+        "provenance.email" if qp.provenance_email else None: qp.provenance_email,
+        "material.formula" if qp.material_formula else None: qp.material_formula,
+        "iemap_id" if qp.iemap_id else None: qp.iemap_id,
+        "process.isExperiment" if qp.isExperiment != None else None: qp.isExperiment,
+        # simulationCode translate into the 2 following fields ~~~~~~~~~~~~~~~~~~~
+        "process.isExperiment" if qp.simulationCode else None: False,
+        "process.agent.name" if qp.simulationCode else None: qp.simulationCode,
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # experimentInstrument translate into the 2 following fields ~~~~~~~~~~~~~~~~~~~
+        "process.isExperiment" if qp.experimentInstrument else None: True,
+        "process.agent.name"
+        if qp.experimentInstrument
+        else None: qp.experimentInstrument,
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # simulationMethod translate into the 2 following fields ~~~~~~~~~~~~~~~~~~~
+        "process.isExperiment" if qp.simulationMethod else None: False,
+        "process.method" if qp.simulationMethod else None: qp.simulationMethod,
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # simulationMethod translate into the 2 following fields ~~~~~~~~~~~~~~~~~~~
+        "process.isExperiment" if qp.experimentMethod else None: True,
+        "process.method" if qp.experimentMethod else None: qp.experimentMethod,
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        "parameters"
+        if qp.parameterName and not qp.parameterValue
+        else None: {"$elemMatch": {"name": qp.parameterName}},
+        "parameters"
+        if qp.parameterValue and qp.parameterValue
+        else None: {
+            "$elemMatch": {
+                "name": qp.parameterName,
+                "value": get_value_float_or_str(qp.parameterValue),
+            }
+        },
+        "properties"
+        if qp.propertyName and not qp.propertyValue
+        else None: {"$elemMatch": {"name": qp.propertyName}},
+        "properties"
+        if qp.propertyName and qp.propertyValue
+        else None: {
+            "$elemMatch": {
+                "name": qp.propertyName,
+                "value": get_value_float_or_str(qp.propertyValue),
+            }
+        },
+        "provenance.createdAt"
+        if qp.publication_dates
+        else None: get_dates(qp.publication_dates)
+        if qp.publication_dates
+        else None,
+        "material.elements"
+        if qp.material_all_elements
+        else None: {"$all": get_list_elements(qp.material_all_elements)},
+        "material.elements"
+        if qp.material_any_element
+        else None: get_list_elements(qp.material_any_element),
+    }
+    del query[None]  # removes single None:None introduced from above dict definition
+    # print(query)
+
+    projection = {}
+    if qp.fields:
+        projection = {i: 1 for i in qp.fields.split(",")}
+    # print(projection)
+    coll = conn[database_name][ai4mat_collection_name]
+    if len(projection) > 0:
+        result_query = await coll.find(query, projection).to_list(None)
+    else:
+        result_query = await coll.find(query).to_list(None)
+    response = []
+    # {"_id": ObjectId("6333075e1fd43266d2a6196a")}
+    for doc in result_query:
+        # convert to dict and exclude none
+        response.append(ProjectQueryResult(**doc).dict(exclude_none=True))
+        # if "_id" in doc.keys():
+        #     doc.pop("_id")
+    return response
+
+
+async def get_user_projects(
+    conn: AsyncIOMotorClient, user_email: str, affiliation: str
+) -> dict:
+    coll = conn[database_name][ai4mat_collection_name]
+    pipeline = get_user_projects_base_info(user_email, affiliation)
+    result = await coll.aggregate(pipeline).to_list(None)
+    return result
+
+
+async def check_documents_having_files_with_hash(
+    conn: AsyncIOMotorClient, user_email: str, affiliation: str, hash_file: str
+) -> dict:
+    """Get documents for the provided user email and affiliation
+       having files with the given hash file
+
+    Args:
+        conn (AsyncIOMotorClient): Motor connection
+        user_email (str): user email (extracted from JWT)
+        affiliation (str): user affilaition (extracted from JWT)
+        hash_file (str): file HASH
+
+    Returns:
+        dict: having fields _id:str, iemap_id:str,
+              files:List[hash:str, name:str, extention:str, size:str, createdAt:Datetime, updatedAt:Datetime]
+    """
+    coll = conn[database_name][ai4mat_collection_name]
+    pipeline = get_proj_having_file_with_given_hash(user_email, affiliation, hash_file)
+    result = await coll.aggregate(pipeline).to_list(None)
+    return result
+
+
+async def pull_files_from_documents(
+    conn: AsyncIOMotorClient, id_doc: ObjectId, hash_file: str
+) -> bool:
+    """_summary_
+
+    Args:
+        conn (AsyncIOMotorClient): _description_
+        hash_file (str): _description_
+
+    Returns:
+        bool: _description_
+    """
+    coll = conn[database_name][ai4mat_collection_name]
+    # pull document from files array and if array field is empty then unset it
+    result = await coll.update_one(
+        {"_id": id_doc},
+        # {"$pull": {"files": {"hash": hash_file}}}
+        [
+            {
+                "$set": {
+                    "files": {
+                        "$filter": {
+                            "input": "$files",
+                            "cond": {"$ne": ["$$this.hash", hash_file]},
+                        }
+                    }
+                }
+            },
+            {
+                "$set": {
+                    "files": {"$cond": [{"$eq": ["$files", []]}, "$$REMOVE", "$files"]}
+                }
+            },
+        ],
+    )
+    # all credits to
+    # https://stackoverflow.com/questions/68984050/unset-array-field-if-it-is-empty-after-pull-in-mongodb
+    return result.modified_count, result.matched_count
+
+
+async def find_proj_having_file_with_hash(
+    conn: AsyncIOMotorClient, hash_file: str
+) -> int:
+    coll = conn[database_name][ai4mat_collection_name]
+
+    result = await coll.find(
+        {"files": {"$elemMatch": {"hash": hash_file}}}, "_id"
+    ).to_list(None)
+
+    num_proj = len(result) if result != None else 0
+    return num_proj
 
 
 # https://medium.com/@madhuri.pednekar/handling-mongodb-objectid-in-python-fastapi-4dd1c7ad67cd

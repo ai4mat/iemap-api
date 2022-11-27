@@ -1,9 +1,18 @@
 import enum
 import hashlib
 import json
-from os import rename, path
+import logging
+from os import path
+from typing import Union
+
+from sentry_sdk import capture_exception
+
+logger = logging.getLogger("ai4mat")
+# from aiofiles.os import rename, remove
 import aiofiles
-from pathlib import Path
+from os import rename, remove
+
+from pathlib import Path, PosixPath
 from math import modf, trunc
 from bson.objectid import ObjectId
 from fastapi.encoders import jsonable_encoder
@@ -39,7 +48,7 @@ def hash_file(filename: str) -> str:
         chunk = 0
         while chunk != b"":
             # read only 1024 bytes at a time
-            chunk = file.read(1024)
+            chunk = file.read(Config.files_chunk_size)
             h.update(chunk)
 
     # return the hex representation of digest
@@ -149,7 +158,9 @@ async def save_file(file: UploadFile, upload_dir: str):
         with open(file_to_write, "wb+") as file_object:
             # SLOWER VERSION BUT DOES NOT LOAD ENTIRE FILE IN MEMORY
             async with aiofiles.open(file_to_write, "wb") as out_file:
-                while content := await file.read(1024 * 1024):  # async read chunk
+                while content := await file.read(
+                    Config.files_chunk_size
+                ):  # async read chunk
                     await out_file.write(content)  # async write chunk
             file_hash = hash_file(file_to_write)
             # full path of new file name
@@ -182,6 +193,82 @@ def get_dir_uploaded(upload_dir: str) -> Path:
         if "app" in str(Path.cwd()).split("/")
         else Path.cwd() / upload_dir
     )
+
+
+async def rename_file_with_its_hash(
+    file_to_write: PosixPath, file_ext: str, upload_dir: str
+) -> Union[str, None]:
+    """Rename file with its hash if it already DOES NOT exists
+       otherwise delete file (not yet renamed with its hash)
+
+    Args:
+        file_to_write (PosixPath): full path file to write
+        file_ext (str): file extention to
+        upload_dir (str): name folder where save data
+    Returns:
+        str|None: new file name (hash+original extention) or None if file yet existing (no overwrite allowed)
+        bool: True if a new file was saved on File System and False if file already on File System
+    """
+    # compute file hashing (data saved in chunk)
+    # hash computed after saving file with its original name
+    try:
+        hash = hash_file(file_to_write)
+        # get new file name = HASH+extention
+        new_file_name = get_dir_uploaded(upload_dir) / f"{hash}.{file_ext}"
+        if not new_file_name.exists():
+            # await rename(file_to_write, new_file_name)
+            rename(file_to_write, new_file_name)
+            return new_file_name, True
+        else:
+            # delete original file before returning None, i.e. no file uploaded
+            # await remove(file_to_write)
+            remove(file_to_write)
+            return new_file_name, False
+    except Exception as e:
+        logger.error(e)
+        capture_exception(e)
+
+
+async def delete_file_with_hash(file_hash: str, upload_dir: str) -> bool:
+    """Delete file from FS having the provided hash
+
+    Args:
+        file_hash (str): HASH file to delete
+        upload_dir (str): path folder containing all uploadd files
+    Returns:
+        bool: True if file successfully deleted
+
+    """
+
+    try:
+        path_file_to_delete = get_dir_uploaded(upload_dir) / file_hash
+        if path_file_to_delete.exists():
+            await aiofiles.os.remove(path_file_to_delete)
+            return True
+        else:
+            return False
+    except Exception as e:
+        logger.error(e)
+        capture_exception(e)
+
+
+def get_value_float_or_str(x):
+    """Get value as float or string
+        first check if value can be correctly converted to float
+        if not return it as string
+        if None return it as is
+    Args:
+        x (str|float|None): value to convert
+
+    Returns:
+        str|float|None: value converted
+    """
+    if x == None:
+        return None
+    try:
+        return float(x)
+    except ValueError:
+        return x
 
 
 # https://www.programiz.com/python-programming/examples/hash-file

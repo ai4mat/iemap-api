@@ -11,13 +11,16 @@ logger = logging.getLogger("ai4mat")
 from motor.motor_asyncio import AsyncIOMotorClient
 from core.config import Config
 from db.mongodb import db
-from typing import Optional
+from typing import Optional, Annotated
+from pydantic import Field
 
 # originally User (this is the name of the collection in MongoDB)
 class UserAuth(BeanieBaseUser[PydanticObjectId]):
     # ADD ANY ADDITIONAL FIELD AS DEFINED in app/models/schemas.py
     affiliation: Optional[str] = None
-    pass
+    created_at: Optional[datetime] = None
+    last_login: Optional[datetime] = None
+    # pass
 
 
 async def get_user_db():

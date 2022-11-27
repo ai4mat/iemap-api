@@ -1,14 +1,17 @@
+import mimetypes
 import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from datetime import datetime
 from os import getcwd, path
 from logging.config import dictConfig
-from fastapi import FastAPI, Request, Response, status, HTTPException
+from fastapi import FastAPI, Request, Depends, status, HTTPException
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 # from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+
+from core.utils import get_dir_uploaded
 
 # from starlette.exceptions import HTTPException
 # from starlette.middleware.cors import CORSMiddleware
@@ -17,7 +20,8 @@ from fastapi.templating import Jinja2Templates
 
 # Initialize Sentry remote error tracking
 sentry_sdk.init(
-    "https://b7d66adc74fd443da385f61725111863@o1111757.ingest.sentry.io/6381392",
+    dsn="https://51844a09de0c494aaaa788de000153c9@o4504162406760448.ingest.sentry.io/4504162409578496",
+    # "https://b7d66adc74fd443da385f61725111863@o1111757.ingest.sentry.io/6381392",
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for performance monitoring.
     # We recommend adjusting this value in production.
@@ -41,6 +45,10 @@ from core.log_config import logging_config
 dictConfig(logging_config)
 
 
+# NECESSARY TO HANDLE FASTAPI_USERS
+from db.mongodb_utils import UserAuth
+from models.users import fastapi_users
+
 # define FASTAPI application
 app = FastAPI(
     title="Mission Innovation IEMAP API",
@@ -53,6 +61,8 @@ app = FastAPI(
         "email": "iemap-api@enea.it",
     },
     license_info={"name": "MIT", "url": "https://mit-license.org/"},
+    # openapi_url="/openapi.json",
+    # root_path="/iemap",
 )
 # ADD SENTRY ASGI MIDDLEWARE, works fine with FastAPI
 app.add_middleware(SentryAsgiMiddleware)
@@ -125,12 +135,15 @@ async def read_item(request: Request):
     return templates.TemplateResponse("form.html", {"request": request})
 
 
+current_user = fastapi_users.current_user(verified=True)
 # TO SERVE FILES
 # http://0.0.0.0:8001/file/hashfile
-
-
 @app.api_route("/file/{name_file}", methods=["GET"])
-def get_file(name_file: str):
+def get_file(
+    name_file: str,
+    # comment row below to remove authentication for this endpoint
+    user: UserAuth = Depends(current_user),
+):
     """Download file from server
 
     Args:
@@ -142,9 +155,16 @@ def get_file(name_file: str):
     Returns:
         stream: binary data of file
     """
-    file_full_path = getcwd() + "/uploaded/" + name_file
-    if path.exists(file_full_path):
-        return FileResponse(path=getcwd() + "/uploaded/" + name_file)
+
+    upload_dir = Config.files_dir
+    base_dir = get_dir_uploaded(upload_dir)
+    # path for file to write on file system
+    file_path = base_dir / name_file
+    # print(file_path)
+    isExisting = file_path.is_file()
+    if isExisting:
+        mtype, _ = mimetypes.guess_type(file_path)
+        return FileResponse(file_path)  # , media_type=mtype)
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found!!"
@@ -163,14 +183,14 @@ async def catch_all(request: Request, path_name: str):
     }
 
 
-if __name__ == "__main__":
-    # Use this for debugging purposes only
-    import uvicorn
+# if __name__ == "__main__":
+#     # Use this for debugging purposes only
+#     import uvicorn
 
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=Config.app_port,
-        log_level="info",
-        reload=True,
-    )
+#     uvicorn.run(
+#         "main:app",
+#         host="0.0.0.0",
+#         port=Config.app_port,
+#         log_level="info",
+#         reload=True,
+#     )
