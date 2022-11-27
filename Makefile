@@ -14,7 +14,7 @@ all: build run
 renew: clean all
 
 build: 
-	@echo '🏗️	Buinding container...'
+	@echo '🏗️	Building container...'
 	@docker build --tag $(APP_NAME):$(TAG) --build-arg UID=$(uid) --build-arg GID=$(gid) --build-arg UNAME=$(uname) .
 
 run: 
