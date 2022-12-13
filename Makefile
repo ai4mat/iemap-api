@@ -14,27 +14,27 @@ all: build run
 renew: clean all
 
 build: 
-	@echo 'Buinding container...'
+	@echo '🏗️	Building container...'
 	@docker build --tag $(APP_NAME):$(TAG) --build-arg UID=$(uid) --build-arg GID=$(gid) --build-arg UNAME=$(uname) .
 
 run: 
-	@echo 'Run container with fs support...'
+	@echo '🏁	Run container with fs support...'
 	@docker run --user $(uid) --restart always --detach -p $(HOST_PORT):80/tcp -v $(HOST_FILESDIR):/data --env-file $(ENV_FILE) $(APP_NAME):$(TAG)
 
 start:
-	@echo 'Starting container...'
+	@echo '🎬	Starting container...'
 	@docker ps -a | grep $(APP_NAME):$(TAG) | awk '{print $$1}' | xargs docker start
 
 stop:
-	@echo 'Stopping container...'
+	@echo '✋🏻	Stopping container...'
 	@docker ps | grep $(APP_NAME):$(TAG) | awk '{print $$1}' | xargs docker stop
 
 kill:
-	@echo 'Killing container...'
+	@echo '💀	Killing container...'
 	@docker ps | grep $(APP_NAME):$(TAG) | awk '{print $$1}' | xargs docker rm -f
 
 clean:
-	@echo 'Killing (eventually) dead container(s)...'
+	@echo '🧹	Cleaning all: kill container, remove eventually dead containers and remove images...'
 	@docker ps -a | grep $(APP_NAME) | awk '{print $$1}' | xargs -r docker rm -f
 	@echo 'Removing container image...'
 	@docker images | grep $(APP_NAME) | awk '{print $$3}' | xargs docker rmi
