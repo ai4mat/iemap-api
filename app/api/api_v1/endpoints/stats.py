@@ -12,7 +12,7 @@ from db.mongodb_utils import UserAuth
 # from core.jwt import get_current_user_authorizer
 from core.auth import JWTBearer, signJWT  # , decodeJWT
 from models.user import UserBase, User
-from crud.stats import project_stat
+from crud.stats import project_stat, project_stat_user
 from db.mongodb import AsyncIOMotorClient, get_database
 
 # Use fastapi_users instance as Dependence Injection into routes
@@ -27,22 +27,6 @@ router = APIRouter()
 
 # Get the current user (active or not)¶
 current_user = fastapi_users.current_user()
-
-# UserAuth is the Beanie Model for storing user credentials
-# @router.get(
-#     "/health/on-premise-auth",
-#     tags=["health"],
-#     status_code=status.HTTP_200_OK,
-#     summary="Check if the on-premise auth service is up and running",
-#     description="Pass a JWT using Beared in Header or using an HTTPonly Cookie",
-# )
-# # IF NO TOKEN IS PROVIDED IN HEADER AS BEARER OR TOKEN NOT VALID
-# # THEN RETURNS
-# # {
-# #     "detail": "Unauthorized"
-# # }
-# async def check_on_premise_auth(user: UserAuth = Depends(current_user)):
-#     return {"message": f"{user.email} ({user.affiliation}) you are welcome!"}
 
 
 # http://0.0.0.0:8001/api/v1/stats
@@ -63,6 +47,45 @@ async def stats_project(
     result = await project_stat(db)
     if type(result) is dict:
         return {"data": result}
+
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Something went wrong!!",
+    )
+
+
+# http://0.0.0.0:8001/api/v1/stats_user/
+# GET STATS ABOUT PROJECTS for the current logged in user
+@router.get(
+    "/stats_user",
+    tags=["stats"],
+    status_code=status.HTTP_200_OK,
+    summary="Statistics on IEMAP User Project",
+    description="This route gets projects statistics for the specified user",
+)
+async def stats_project(
+    db: AsyncIOMotorClient = Depends(get_database),
+    response: Response = Response(status_code=status.HTTP_200_OK),
+    # COMMENT user:...below TO REMOVE AUTHORIZATION ~~~~~~~~~~~~~~~
+    # IF USER ACCOUNT IS NOT VERIFIED IT RETURNS FORBIDDEN ~~~~~~~~~~~~~~~~
+    # Options defined in current_user RULE how authentication works, see below
+    # https://fastapi-users.github.io/fastapi-users/10.1/usage/current-user/?h=verified#get-the-current-active-and-verified-user
+    user: UserAuth = Depends(current_user),
+):
+
+    # dictionary result aggreation pipeline
+    result = await project_stat_user(db, user.email)
+    if type(result) is dict:
+        return {"data": result}
+    # return a JSON resposne as
+    #     {
+    #     "data": {
+    #         "total": 45, # total number of projects in DB
+    #         "totalByUser": 42, # total number of projects for the current l user
+    #         "totalByUserWithFile": 24, # total number of projects for the current user with at least one file
+    #         "totalByUserCountFiles": 74 # total number of files for the current user
+    #     }
+    # }
 
     raise HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
