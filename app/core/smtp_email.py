@@ -91,4 +91,15 @@ async def readVerifyMailTemplate(filename, linkToVerifyEndpoint):
         return contents
 
 
+# read mail template for reset password
+# template in path /templates/reset_pwd_template.html
+# use href="{{}}" to replace with linkToResetPasswordEndpoint
+async def readResetPasswordMailTemplate(filename, linkToResetPasswordEndpoint):
+    async with aiofiles.open(filename, mode="r") as f:
+        contents = await f.read()
+        link = f'href="{linkToResetPasswordEndpoint}"'
+        contents = contents.replace('href="{{}}"', link)
+        return contents
+
+
 # https://stackoverflow.com/questions/60224850/send-mail-python-asyncio#60226128
