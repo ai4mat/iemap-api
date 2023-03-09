@@ -25,3 +25,14 @@ async def project_stat(conn: AsyncIOMotorClient) -> dict:
     # result[0] to return a dictionary
     result = await coll.aggregate(pipeline).to_list(length=None)
     return result[0]
+
+
+# get statitics about a SPECIFIC user's projects
+async def project_stat_user(conn: AsyncIOMotorClient, email: str) -> dict:
+    # get Motor Client
+    coll = conn[database_name][ai4mat_collection_name]
+    # execute aggregation pipeline
+    pipeline = get_proj_stats_by_user(email=email)
+    # result[0] to return a dictionary
+    result = await coll.aggregate(pipeline).to_list(length=None)
+    return result[0]
