@@ -99,9 +99,9 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
         urlResetParams = f"/changepwd?email={user.email}&token={token}"
         strLinkResetPwd = frontend + urlResetParams
         pathVerifyEmail = (
-            "./app/templates/mail_template.html"
+            "./app/templates/reset_pwd_template.html"
             if not "app" in str(Path.cwd()).split("/")
-            else "./templates/mail_template.html"
+            else "./templates/reset_pwd_template.html"
         )
         # build up text for email from template
         textMail = await readResetPasswordMailTemplate(pathVerifyEmail, strLinkResetPwd)
