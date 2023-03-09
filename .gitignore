@@ -160,3 +160,4 @@ cython_debug/
 
 uploaded
 .cif
+app/.lh/.lhignore
