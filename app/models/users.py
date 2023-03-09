@@ -11,7 +11,11 @@ from fastapi_users.authentication import (
 )
 from fastapi_users.db import BeanieUserDatabase, ObjectIDIDMixin
 from db.mongodb_utils import UserAuth, get_user_db
-from core.smtp_email import readVerifyMailTemplate, send_mail_async
+from core.smtp_email import (
+    readResetPasswordMailTemplate,
+    readVerifyMailTemplate,
+    send_mail_async,
+)
 from core.config import Config
 
 from fastapi_users.manager import BaseUserManager
@@ -23,6 +27,8 @@ from datetime import datetime
 from fastapi.security import OAuth2PasswordRequestForm
 
 SECRET = Config.secrete_on_premise_auth
+# GET PATH FRONTEND FROM CONFIG
+frontend = Config.front_end
 
 
 class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
@@ -82,11 +88,27 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
             [user.email], "Finish registration to IEMAP REST API service", textMail
         )
 
+    # /auth/forgot-password
+    # send email to user with link to reset password
+    # always return status code 200 even if user is not found
     async def on_after_forgot_password(
         self, user: UserAuth, token: str, request: Optional[Request] = None
     ):
-
-        print(f"User {user.id} has forgot their password. Reset token: {token}")
+        # execute only if user is found
+        # print(f"User {user.id} has forgot their password. Reset token: {token}")
+        urlResetParams = f"/changepwd?email={user.email}&token={token}"
+        strLinkResetPwd = frontend + urlResetParams
+        pathVerifyEmail = (
+            "./app/templates/mail_template.html"
+            if not "app" in str(Path.cwd()).split("/")
+            else "./templates/mail_template.html"
+        )
+        # build up text for email from template
+        textMail = await readResetPasswordMailTemplate(pathVerifyEmail, strLinkResetPwd)
+        # send email to user to reset password
+        await send_mail_async(
+            [user.email], "Finish registration to IEMAP REST API service", textMail
+        )
 
     async def on_after_request_verify(
         self, user: UserAuth, token: str, request: Optional[Request] = None
