@@ -65,3 +65,88 @@ def get_proj_having_file_with_given_hash(
         },
     ]
     return pipeline
+
+
+def get_proj_stats() -> dict:
+    pipeline = [
+        {
+            "$facet": {
+                "total": [{"$count": "total"}],
+                "countByAffiliation": [
+                    {"$group": {"_id": "$provenance.affiliation", "count": {"$sum": 1}}}
+                ],
+                "countByUsers": [
+                    {"$group": {"_id": "$provenance.email", "count": {"$sum": 1}}}
+                ],
+                "countHavingFiles": [
+                    {"$match": {"files": {"$exists": True}}},
+                    {"$count": "total"},
+                ],
+                "totalFiles": [
+                    {"$match": {"files": {"$exists": True}}},
+                    {
+                        "$project": {
+                            "numfiles": {"$size": "$files"},
+                            "affiliation": "$provenance.affiliation",
+                        }
+                    },
+                    {"$group": {"_id": "$affiliation", "count": {"$sum": "$numfiles"}}},
+                ],
+            }
+        },
+        {
+            "$project": {
+                "total": {"$first": "$total.total"},
+                "totalUsers": {"$size": "$countByAffiliation.count"},
+                "countByAffiliation": 1,
+            }
+        },
+    ]
+    return pipeline
+
+
+def get_proj_stats_by_user(email: str) -> dict:
+    pipeline = [
+        {
+            "$facet": {
+                "countTotal": [{"$count": "total"}],
+                "countByUser": [
+                    {"$match": {"provenance.email": email}},
+                    {"$count": "total"},
+                ],
+                "countHavingFiles": [
+                    {
+                        "$match": {
+                            "$and": [
+                                {"provenance.email": "sergio.ferlito@enea.it"},
+                                {"files": {"$exists": True}},
+                            ]
+                        }
+                    },
+                    {"$count": "total"},
+                ],
+                "totalFiles": [
+                    {
+                        "$match": {
+                            "$and": [
+                                {"provenance.email": "sergio.ferlito@enea.it"},
+                                {"files": {"$exists": True}},
+                            ]
+                        }
+                    },
+                    {"$project": {"numfiles": {"$size": "$files"}}},
+                    {"$group": {"_id": None, "count": {"$sum": "$numfiles"}}},
+                ],
+            }
+        },
+        {
+            "$project": {
+                "total": {"$arrayElemAt": ["$countTotal.total", 0]},
+                "totalByUser": {"$arrayElemAt": ["$countByUser.total", 0]},
+                "totalByUserWithFile": {"$arrayElemAt": ["$countHavingFiles.total", 0]},
+                "totalByUserCountFiles": {"$first": "$totalFiles.count"},
+            }
+        },
+    ]
+
+    return pipeline
