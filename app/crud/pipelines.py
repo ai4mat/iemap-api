@@ -105,6 +105,13 @@ def get_proj_stats() -> dict:
                         "in": {"affiliation": "$$cba._id", "n": "$$cba.count"},
                     }
                 },
+                "countFiles": {
+                    "$map": {
+                        "input": "$totalFiles",
+                        "as": "tf",
+                        "in": {"affiliation": "$$tf._id", "n": "$$tf.count"},
+                    }
+                },
             }
         },
     ]
