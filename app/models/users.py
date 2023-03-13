@@ -116,7 +116,19 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
         # retrieve requested url to use for link to embend in email sent to user
         strBaseRequest = str(request.url).split("auth/request-verify-token")[0]
         strEndpointVerifyByEmail = "auth/verify-email/"
-        strLinkVerifyEmail = strBaseRequest + strEndpointVerifyByEmail + token
+
+        # OLD LINK
+        # strLinkVerifyEmail = strBaseRequest + strEndpointVerifyByEmail + token
+
+        # NEW LINK for account activation
+        # this link in used in the frontend to activate the account
+        # the activation token is sent via email to the user and passed to the frontend
+        # as a query parameter (token_activation), if present the frontend will call
+        # the backend to activate the account using the endpoint /auth/verify
+        # and then redirect the user to the login page
+        strLinkVerifyEmail = (
+            f"{frontend}/auth/account-confirm/?token_activation={token}"
+        )
         pathVerifyEmail = (
             "./app/templates/mail_template.html"
             if not "app" in str(Path.cwd()).split("/")
