@@ -96,7 +96,7 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
     ):
         # execute only if user is found
         # print(f"User {user.id} has forgot their password. Reset token: {token}")
-        urlResetParams = f"/changepwd?email={user.email}&token={token}"
+        urlResetParams = f"/auth/changepwd?email={user.email}&token={token}"
         strLinkResetPwd = frontend + urlResetParams
         pathVerifyEmail = (
             "./app/templates/reset_pwd_template.html"
@@ -107,7 +107,9 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
         textMail = await readResetPasswordMailTemplate(pathVerifyEmail, strLinkResetPwd)
         # send email to user to reset password
         await send_mail_async(
-            [user.email], "Finish registration to IEMAP REST API service", textMail
+            [user.email],
+            "Request reset passworf for your IEMAP accoutn received",
+            textMail,
         )
 
     async def on_after_request_verify(
