@@ -96,7 +96,8 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
     ):
         # execute only if user is found
         # print(f"User {user.id} has forgot their password. Reset token: {token}")
-        urlResetParams = f"/auth/changepwd?email={user.email}&token={token}"
+        # f"/auth/changepwd?email={user.email}&token={token}"
+        urlResetParams = f"/auth/changepwd?token_reset={token}"
         strLinkResetPwd = frontend + urlResetParams
         pathVerifyEmail = (
             "./app/templates/reset_pwd_template.html"
