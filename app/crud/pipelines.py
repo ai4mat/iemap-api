@@ -96,9 +96,22 @@ def get_proj_stats() -> dict:
         },
         {
             "$project": {
-                "total": {"$first": "$total.total"},
+                "totalProj": {"$first": "$total.total"},
                 "totalUsers": {"$size": "$countByAffiliation.count"},
-                "countByAffiliation": 1,
+                "countProj": {
+                    "$map": {
+                        "input": "$countByAffiliation",
+                        "as": "cba",
+                        "in": {"affiliation": "$$cba._id", "n": "$$cba.count"},
+                    }
+                },
+                "countFiles": {
+                    "$map": {
+                        "input": "$totalFiles",
+                        "as": "tf",
+                        "in": {"affiliation": "$$tf._id", "n": "$$tf.count"},
+                    }
+                },
             }
         },
     ]
