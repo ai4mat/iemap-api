@@ -95,7 +95,7 @@ async def stats_project(
 
 # http://0.0.0.0:8001/api/v1/stats_iemap
 # GET DISTICNT FORMULAS AND ELEMENTS in IEMAP DB (as whole)
-# with theri counts
+# with their counts
 @router.get(
     "/stats_iemap",
     tags=["stats"],
