@@ -15,14 +15,14 @@ This API can run in _development mode_ in you local machine or deployed as conta
 
 ### Official site
 
-You can find the last working API version on the official site: [ai4mat.enea.it](https://ai4mat.enea.it)
+You can find the last working API version on the official site: [iemap.enea.it](https://iemap.enea.it)
 
 ### Official documentation
 
 All routes are described on:
 
-- [`ai4mat.enea.it/docs`](https://ai4mat.enea.it/docs) with Swagger
-- [`ai4mat.enea.it/redoc`](https://ai4mat.enea.it/redoc) with ReDoc.
+- [`iemap.enea.it/docs`](https://iemap.enea.it/docs) with Swagger
+- [`iemap.enea.it/redoc`](https://iemap.enea.it/redoc) with ReDoc.
 
 A complete documentation is available on [ReadTheDocs](https://iemap-api.readthedocs.io/en/latest/index.html).
 
