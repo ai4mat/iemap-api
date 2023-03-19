@@ -9,7 +9,11 @@ from core.config import Config
 
 from models.iemap import Project as IEMAPModel
 from models.iemap import ProjectQueryResult
-from crud.pipelines import get_proj_stats, get_proj_stats_by_user
+from crud.pipelines import (
+    get_iemap_formulas_and_elements,
+    get_proj_stats,
+    get_proj_stats_by_user,
+)
 
 from dateutil.parser import parse
 
@@ -36,3 +40,22 @@ async def project_stat_user(conn: AsyncIOMotorClient, email: str) -> dict:
     # result[0] to return a dictionary
     result = await coll.aggregate(pipeline).to_list(length=None)
     return result[0]
+
+
+# get distinct formulas and elements (with their count)
+async def iemap_formulas_elements(conn: AsyncIOMotorClient) -> dict:
+    # get Motor Client
+    coll = conn[database_name][ai4mat_collection_name]
+    # execute aggregation pipeline
+    pipeline = get_iemap_formulas_and_elements()
+    # result[0] to return a dictionary
+    result_arr = await coll.aggregate(pipeline).to_list(length=None)
+    number_of_formulas = len(result_arr[0]["formulas"])
+    number_of_elements = len(result_arr[0]["unique_elements"])
+    result: dict = result_arr[0]
+    data = {
+        **result,
+        "n_formulas": number_of_formulas,
+        "n_elements": number_of_elements,
+    }
+    return data
