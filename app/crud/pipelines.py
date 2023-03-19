@@ -163,3 +163,48 @@ def get_proj_stats_by_user(email: str) -> dict:
     ]
 
     return pipeline
+
+
+def get_iemap_formulas_and_elements() -> dict:
+    pipeline = [
+        {
+            "$group": {
+                "_id": 0,
+                "formulas": {"$addToSet": "$material.formula"},
+                "elements": {"$addToSet": "$material.elements"},
+            }
+        },
+        {
+            "$project": {
+                "formulas": 1,
+                "all_elements": {
+                    "$reduce": {
+                        "input": "$elements",
+                        "initialValue": [],
+                        "in": {
+                            "$concatArrays": [
+                                "$$value",
+                                {
+                                    "$cond": [
+                                        {"$isArray": "$$this"},
+                                        "$$this",
+                                        ["$$this"],
+                                    ]
+                                },
+                            ]
+                        },
+                    }
+                },
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "formulas": 1,
+                "unique_elements": {
+                    "$setIntersection": ["$all_elements", "$all_elements"]
+                },
+            }
+        },
+    ]
+    return pipeline
