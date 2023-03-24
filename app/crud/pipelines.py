@@ -96,7 +96,8 @@ def get_proj_stats() -> dict:
         },
         {
             "$project": {
-                "totalProj": {"$first": "$total.total"},
+                # "totalProj": {"$first": "$total.total"}, # this is the same as the next line, not supported in MongoDB 4
+                "totalProj": {"$arrayElemAt": ["$total.total", 0]},
                 "totalUsers": {"$size": "$countByAffiliation.count"},
                 "countProj": {
                     "$map": {
