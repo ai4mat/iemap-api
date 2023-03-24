@@ -262,6 +262,9 @@ query_params = {
     "propertyName": (str, None),
     "propertyValue": (Union[str, float], None),
     "fields": (str, None),
+    "limit": (int, 10),
+    "skip": (int, 0),
+    "sort": (List[int], None)
 }
 
 queryModel = create_model("Query", **query_params)
