@@ -19,6 +19,7 @@ from pydantic import Json
 from fastapi import (
     APIRouter,
     Depends,
+    Response,
     status,
     File,
     Form,
@@ -600,6 +601,7 @@ async def form_add_property_and_file(
 
 @router.get("/project/query/", tags=["projects"])
 async def form_add_project_file(
+    response: Response,
     params: queryModel = Depends(),
     db: AsyncIOMotorClient = Depends(get_database),
     # response_model=queryModel, #THIS broke swagger auto documentation, FIX THIS!!
@@ -625,9 +627,9 @@ async def form_add_project_file(
         }
     """
     # params_as_dict = params.dict()
-
     result = await exec_query(db, params)
-    return result
+    response.headers["x-total-count"] = str(result.get("count"))
+    return result.get("data")
 
 
 # DELETE FILE FROM PROJECT providing FILE HASH
