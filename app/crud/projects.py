@@ -1,3 +1,5 @@
+import json
+from pprint import pprint
 from typing import List
 
 from core.utils import get_value_float_or_str
@@ -323,6 +325,12 @@ async def find_all_project_paginated(
 
 async def exec_query(conn: AsyncIOMotorClient, qp: queryModel):
 
+    limit = qp.limit
+    skip = qp.skip
+    # read sort from query params if
+    sort = json.loads(qp.sort if qp.sort else '{"provenance.createdAt": -1}')
+    sort_tuples = [(k, v) for k, v in sort.items()]  # motor needs a list of tuples
+
     get_affiliation = lambda x: x.affiliation.split(",") if x.affiliation else None
     get_dates = (
         lambda x: {"$gte": parse(x[0]), "$lte": parse(x[1])}
@@ -383,9 +391,9 @@ async def exec_query(conn: AsyncIOMotorClient, qp: queryModel):
             }
         },
         "provenance.createdAt"
-        if qp.publication_dates
-        else None: get_dates(qp.publication_dates)
-        if qp.publication_dates
+        if qp.start_date or qp.end_date
+        else None: get_dates([qp.start_date, qp.end_date])
+        if qp.start_date or qp.end_date
         else None,
         "material.elements"
         if qp.material_all_elements
@@ -396,16 +404,19 @@ async def exec_query(conn: AsyncIOMotorClient, qp: queryModel):
     }
     del query[None]  # removes single None:None introduced from above dict definition
     # print(query)
+    # pprint(query)
 
     projection = {}
     if qp.fields:
         projection = {i: 1 for i in qp.fields.split(",")}
     # print(projection)
     coll = conn[database_name][ai4mat_collection_name]
+    count = await coll.count_documents(query)
     if len(projection) > 0:
-        result_query = await coll.find(query, projection).to_list(None)
+        cursor = coll.find(query, projection)
     else:
-        result_query = await coll.find(query).to_list(None)
+        cursor = coll.find(query)
+    result_query = await cursor.sort(sort_tuples).skip(skip).limit(limit).to_list(None)
     response = []
     # {"_id": ObjectId("6333075e1fd43266d2a6196a")}
     for doc in result_query:
@@ -417,7 +428,7 @@ async def exec_query(conn: AsyncIOMotorClient, qp: queryModel):
             print(doc["_id"])
         # if "_id" in doc.keys():
         #     doc.pop("_id")
-    return response
+    return {"count": count, "data": response}
 
 
 async def get_user_projects(
