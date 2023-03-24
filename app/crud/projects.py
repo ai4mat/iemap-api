@@ -410,7 +410,11 @@ async def exec_query(conn: AsyncIOMotorClient, qp: queryModel):
     # {"_id": ObjectId("6333075e1fd43266d2a6196a")}
     for doc in result_query:
         # convert to dict and exclude none
-        response.append(ProjectQueryResult(**doc).dict(exclude_none=True))
+        try:
+            response.append(ProjectQueryResult(**doc).dict(exclude_none=True))
+        except Exception as e:
+            print(e)
+            print(doc["_id"])
         # if "_id" in doc.keys():
         #     doc.pop("_id")
     return response
