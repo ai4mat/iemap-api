@@ -4,7 +4,7 @@ from enum import Enum
 
 
 from bson.objectid import ObjectId as BsonObjectId
-from typing import Annotated, List, Union, Optional, Type, Tuple
+from typing import Annotated, Dict, List, Union, Optional, Type, Tuple
 import inspect
 import json
 from pydantic import BaseModel, SecretStr, Field, validator, create_model, EmailStr
@@ -246,8 +246,8 @@ query_params = {
     "affiliation": (str, None),
     "project_name": (str, None),
     "provenance_email": (EmailStr, None),
-    "publication_dates": (str, None),
-    "date_publication": (datetime, None),
+    # "publication_dates": (str, None),
+    # "date_publication": (datetime, None),
     "material_formula": (str, None),
     "material_all_elements": (str, None),
     "material_any_element": (str, None),
@@ -264,7 +264,10 @@ query_params = {
     "fields": (str, None),
     "limit": (int, 10),
     "skip": (int, 0),
-    "sort": (List[int], None)
+    # "sort": (Dict[str,int],None),#(str, None), //UNABLE TO PASS DICT IN QUERY PARAMS
+    "sort": (str, None),
+    "start_date": (str, None),
+    "end_date": (str, None),
 }
 
 queryModel = create_model("Query", **query_params)
@@ -375,6 +378,10 @@ class ProjectFileForm(BaseModel):
 # https://github.com/samuelcolvin/pydantic/issues/1593
 
 if __name__ == "__main__":
+
+
+    q= queryModel(sort={"date_creation":-1})
+    print(q)
 
     # TEST Model
     p = Process.parse_obj(
