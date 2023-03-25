@@ -71,7 +71,9 @@ class Config(object):
     app_name = config["APP_NAME"]
     allowed_hosts = CommaSeparatedStrings(config.get("ALLOWED_HOSTS", "*"))
     api_v1_str = config["API_V1_STR"]
-    front_end = config["FRONTEND"]
+    front_end = (
+        config["FRONTEND"] if config.get("FRONTEND") else "http://localhost:3000"
+    )
     files_dir = config["FILESDIR"]
     files_chunk_size = int(config.get("FILES_CHUNK_SIZE", 1024 * 1024 * 10))
     allowed_mime_types = allowed_mime_types
