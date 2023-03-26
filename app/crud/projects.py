@@ -347,7 +347,9 @@ async def exec_query(conn: AsyncIOMotorClient, qp: queryModel):
         else None: {"$in": get_affiliation(qp)},
         "project.name" if qp.project_name else None: qp.project_name,
         "provenance.email" if qp.provenance_email else None: qp.provenance_email,
-        "material.formula" if qp.material_formula else None: qp.material_formula,
+        "material.formula"
+        if qp.material_formula
+        else None: {"$regex": qp.material_formula},
         "iemap_id" if qp.iemap_id else None: qp.iemap_id,
         "process.isExperiment" if qp.isExperiment != None else None: qp.isExperiment,
         # simulationCode translate into the 2 following fields ~~~~~~~~~~~~~~~~~~~
