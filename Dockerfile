@@ -31,4 +31,4 @@ RUN bash -c 'if [[ ${ostype} == Linux ]] ; then addgroup --gid ${GID} ${UNAME} &
     chown -R ${UID}:${GID} /data; fi'
 USER ${UNAME}
 
-CMD ["uvicorn", "main:app", "--proxy-headers", "--root-path /rest" ,"--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "main:app", "--proxy-headers", "--root-path", "/rest" ,"--host", "0.0.0.0", "--port", "80"]
