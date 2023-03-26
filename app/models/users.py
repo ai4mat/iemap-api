@@ -83,10 +83,12 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
             if not "app" in str(Path.cwd()).split("/")
             else "./templates/mail_template.html"
         )
-        textMail = await readVerifyMailTemplate(pathVerifyEmail, strLinkVerifyEmail)
-        await send_mail_async(
-            [user.email], "Finish registration to IEMAP REST API service", textMail
-        )
+
+        # NO MORE NECESSARY TO SEND EMAIL
+        # textMail = await readVerifyMailTemplate(pathVerifyEmail, strLinkVerifyEmail)
+        # await send_mail_async(
+        #     [user.email], "Finish registration to IEMAP REST API service", textMail
+        # )
 
     # /auth/forgot-password
     # send email to user with link to reset password
