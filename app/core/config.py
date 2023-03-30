@@ -58,7 +58,11 @@ class Config(object):
     mongo_db = config["MONGO_DATABASE"]
     mongo_uri = config["MONGO_URI"]
     mongo_coll = config["MONGO_COLLECTION"]
-    mongo_coll_users = config["MONGO_COLLECTION_USERS"]
+    mongo_coll_users = (
+        config["MONGO_COLLECTION_USERS"]
+        if config.get("MONGO_COLLECTION_USERS")
+        else "UserAuth"
+    )
     max_conn = int(os.getenv("MAX_CONNECTIONS_COUNT", 10))
     min_conn = int(os.getenv("MIN_CONNECTIONS_COUNT", 10))
     jwt_secret_key = config["JWT_SECRET_KEY"]
