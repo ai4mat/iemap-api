@@ -18,7 +18,11 @@ from crud.pipelines import (
 from dateutil.parser import parse
 
 # retrieve DB name and collection name from config
-database_name, ai4mat_collection_name = (Config.mongo_db, Config.mongo_coll)
+database_name, ai4mat_collection_name, auth_collection = (
+    Config.mongo_db,
+    Config.mongo_coll,
+    Config.mongo_coll_users,
+)
 
 # get statitics about all projects
 async def project_stat(conn: AsyncIOMotorClient) -> dict:
@@ -28,6 +32,11 @@ async def project_stat(conn: AsyncIOMotorClient) -> dict:
     pipeline = get_proj_stats()
     # result[0] to return a dictionary
     result = await coll.aggregate(pipeline).to_list(length=None)
+    # get number of users by quering the auth collection
+    coll_users = conn[database_name][auth_collection]
+    num_users = await coll_users.count_documents({"is_verified": True})
+    # add number of users to the result array
+    result[0]["totalUsersRegistered"] = num_users
     return result[0]
 
 
