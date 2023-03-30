@@ -65,7 +65,15 @@ async def send_mail_async(to, subject, text, **params):
     isSSL = mail_params.get("SSL", False)
     isTLS = mail_params.get("TLS", False)
     port = mail_params.get("port", 465 if isSSL else 25)
-    smtp = aiosmtplib.SMTP(hostname=host, port=port, use_tls=isSSL)
+
+    smtp = aiosmtplib.SMTP(
+        hostname=host,
+        port=587,
+        start_tls=False,
+        use_tls=False,
+        # port=port,
+        # use_tls=isSSL,
+    )
     await smtp.connect()
     if isTLS:
         await smtp.starttls()
@@ -79,6 +87,17 @@ async def readVerifyMailTemplate(filename, linkToVerifyEndpoint):
     async with aiofiles.open(filename, mode="r") as f:
         contents = await f.read()
         link = f'href="{linkToVerifyEndpoint}"'
+        contents = contents.replace('href="{{}}"', link)
+        return contents
+
+
+# read mail template for reset password
+# template in path /templates/reset_pwd_template.html
+# use href="{{}}" to replace with linkToResetPasswordEndpoint
+async def readResetPasswordMailTemplate(filename, linkToResetPasswordEndpoint):
+    async with aiofiles.open(filename, mode="r") as f:
+        contents = await f.read()
+        link = f'href="{linkToResetPasswordEndpoint}"'
         contents = contents.replace('href="{{}}"', link)
         return contents
 

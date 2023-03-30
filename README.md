@@ -1,11 +1,11 @@
 # IEMAP RESTful/GraphQL API
+
 ![GitHub](https://img.shields.io/github/license/ai4mat/iemap-api)
 ![GitHub release](https://img.shields.io/github/v/release/ai4mat/iemap-api?sort=semver)
 ![GitHub top language](https://img.shields.io/github/languages/top/ai4mat/iemap-api)
 ![Website](https://img.shields.io/website?down_color=red&down_message=offline&up_color=green&up_message=online&url=https%3A%2F%2Fai4mat.enea.it%2Fdocs)
 ![Security Headers](https://img.shields.io/security-headers?url=https%3A%2F%2Fai4mat.enea.it)
 ![Mozilla HTTP Observatory Grade](https://img.shields.io/mozilla-observatory/grade-score/ai4mat.enea.it?publish)
-
 
 ## General Informations
 
@@ -15,24 +15,27 @@ This API can run in _development mode_ in you local machine or deployed as conta
 
 ### Official site
 
-You can find the last working API version on the official site: [ai4mat.enea.it](https://ai4mat.enea.it)
+You can find the last working API version on the official site: [iemap.enea.it](https://iemap.enea.it)
 
 ### Official documentation
 
 All routes are described on:
-- [`ai4mat.enea.it/docs`](https://ai4mat.enea.it/docs) with Swagger
-- [`ai4mat.enea.it/redoc`](https://ai4mat.enea.it/redoc) with ReDoc.
-  
+
+- [`iemap.enea.it/docs`](https://iemap.enea.it/docs) with Swagger
+- [`iemap.enea.it/redoc`](https://iemap.enea.it/redoc) with ReDoc.
+
 A complete documentation is available on [ReadTheDocs](https://iemap-api.readthedocs.io/en/latest/index.html).
 
 ## Project structure
+
 All files related to the application are in the `app` directory into the following subfolders:
- - models: pydantic models that used in crud or handlers
- - crud: CRUD for types from models (create new user/article/comment, check if user is followed by another, etc)
- - db: db specific utils
- - core: some general components (jwt, security, configuration)
- - api: handlers for routes
- - main.py: FastAPI application instance, CORS configuration and api router including
+
+- models: pydantic models that used in crud or handlers
+- crud: CRUD for types from models (create new user/article/comment, check if user is followed by another, etc)
+- db: db specific utils
+- core: some general components (jwt, security, configuration)
+- api: handlers for routes
+- main.py: FastAPI application instance, CORS configuration and api router including
 
 ## Installation
 
@@ -63,7 +66,8 @@ First of all you need to export variables into the environment with:
 ```bash
 export $(xargs < .env)
 ```
-After that you need to create the python environment. You can choose to use `pip` or `poetry`.  
+
+After that you need to create the python environment. You can choose to use `pip` or `poetry`.
 
 #### 2a - Setup python environment with pip
 
@@ -104,8 +108,11 @@ cd app/
 uvicorn main:app --reload
 ```
 
+> Note to run on SSL with a self-signed certificate use:  
+> `uvicorn main:app --host 0.0.0.0 --port 8001 --reload --ssl-keyfile ~/Downloads/nginx-selfsigned.key --ssl-certfile ~/Downloads/nginx-selfsigned.crt --log-level debug --log-config log_conf.yml --proxy-headers`
 
 ### Run as container (Production)
+
 #### 0 - Prerequisites
 
 In the following we are assuming that you can manage docker with a non-root user. To do so, run the following commands:
@@ -120,15 +127,18 @@ You had created the `docker` group first and then added your user to it. This wa
 #### 1 - Configuration
 
 Into the `.env` file, you need to set:
+
 ```bash
 FILESDIR=data
 ```
+
 That is the default folder inside the container to store files. That folder is created automatically when you build the container, and mounted automatically when you run it with the external host folder specified as the following:
+
 ```bash
 export HOST_FILESDIR=<absoloute path where uploaded files are stored>
 ```
-You may prefer to store this into the `.bashrc` or `.profile`.
 
+You may prefer to store this into the `.bashrc` or `.profile`.
 
 #### 2 - Build image and run container
 
@@ -137,14 +147,19 @@ Run the following command to build the image and run the container:
 ```bash
 make all
 ```
+
 You can also run multiple containers from the same builded image. You need to build first and then run each container on different port. To do so, run the following command:
+
 ```bash
 make build
 ```
+
 And then run each container:
+
 ```bash
 make HOST_PORT=<port> run
 ```
+
 In the following a complete list of commands defined into the `Makefile`, to simplify container managment:
 | Action | `command` |
 |:---|:---|
@@ -156,10 +171,11 @@ In the following a complete list of commands defined into the `Makefile`, to sim
 | Kill (stop & remove) container) | `make kill` |
 | Clean (remove eventually dead containers and remove images)) | `make clean` |
 
->Remeber: to get the list of running containers (with their IDs), run:
->```bash
->docker ps
->```
+> Remeber: to get the list of running containers (with their IDs), run:
+>
+> ```bash
+> docker ps
+> ```
 
 #### 3 - Configure NGINX as reverse proxy
 
@@ -178,7 +194,7 @@ server {
 
     ssl_certificate /etc/letsencrypt/live/<your-domain-name>/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/<your-domain-name>/privkey.pem;
-    
+
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
@@ -261,15 +277,21 @@ systemctl restart nginx
 ### Check API
 
 #### 1a - Check if the API is running locally
+
 ```bash
 curl http://localhost:8000
-``` 
+```
+
 #### 1b - Check if the API is running on the server (with SSL/TLS encryption)
+
 ```bash
 curl https://<server-hostname>
 ```
+
 #### 2 - Expected behavior
+
 If all is working properly, you'll get this output:
+
 ```json
 {
   "request_method": "GET",

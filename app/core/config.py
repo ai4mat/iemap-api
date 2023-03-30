@@ -24,6 +24,16 @@ allowed_mime_types = [
     "application/vnd.multiad.creator.cif",  # .cif
     "text/x-markdown",
     "application/rtf",
+    "application/doc",
+    "application/msword",
+    "application/rtf",
+    "application/x-rtf",
+    "application/x-soffice",
+    "image/png",
+    "image/jpeg",
+    "image/bmp",
+    "image/tiff",
+    "text/richtext",
     "application/json",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.ms-excel",
@@ -61,6 +71,7 @@ class Config(object):
     app_name = config["APP_NAME"]
     allowed_hosts = CommaSeparatedStrings(config.get("ALLOWED_HOSTS", "*"))
     api_v1_str = config["API_V1_STR"]
+    front_end = config["FRONTEND"]
     files_dir = config["FILESDIR"]
     files_chunk_size = int(config.get("FILES_CHUNK_SIZE", 1024 * 1024 * 10))
     allowed_mime_types = allowed_mime_types

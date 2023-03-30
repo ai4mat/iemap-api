@@ -8,6 +8,8 @@ from fastapi import FastAPI, Request, Depends, status, HTTPException
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
+from fastapi.middleware.cors import CORSMiddleware
+
 # from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -94,13 +96,18 @@ async def validation_exception_handler(request, err):
     return JSONResponse(status_code=400, content={"message": message})
 
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=Config.allowed_hosts,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=Config.allowed_hosts,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "HEAD", "OPTIONS"],
+    allow_headers=[
+        "Access-Control-Allow-Headers",
+        "Content-Type",
+        "Authorization",
+        "Access-Control-Allow-Origin",
+    ],
+)
 
 app.add_event_handler("startup", connect_to_mongo)
 app.add_event_handler("shutdown", close_mongo_connection)

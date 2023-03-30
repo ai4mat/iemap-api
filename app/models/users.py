@@ -11,7 +11,11 @@ from fastapi_users.authentication import (
 )
 from fastapi_users.db import BeanieUserDatabase, ObjectIDIDMixin
 from db.mongodb_utils import UserAuth, get_user_db
-from core.smtp_email import readVerifyMailTemplate, send_mail_async
+from core.smtp_email import (
+    readResetPasswordMailTemplate,
+    readVerifyMailTemplate,
+    send_mail_async,
+)
 from core.config import Config
 
 from fastapi_users.manager import BaseUserManager
@@ -23,6 +27,8 @@ from datetime import datetime
 from fastapi.security import OAuth2PasswordRequestForm
 
 SECRET = Config.secrete_on_premise_auth
+# GET PATH FRONTEND FROM CONFIG
+frontend = Config.front_end
 
 
 class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
@@ -82,11 +88,30 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
             [user.email], "Finish registration to IEMAP REST API service", textMail
         )
 
+    # /auth/forgot-password
+    # send email to user with link to reset password
+    # always return status code 200 even if user is not found
     async def on_after_forgot_password(
         self, user: UserAuth, token: str, request: Optional[Request] = None
     ):
-
-        print(f"User {user.id} has forgot their password. Reset token: {token}")
+        # execute only if user is found
+        # print(f"User {user.id} has forgot their password. Reset token: {token}")
+        # f"/auth/changepwd?email={user.email}&token={token}"
+        urlResetParams = f"/auth/changepwd?token_reset={token}"
+        strLinkResetPwd = frontend + urlResetParams
+        pathVerifyEmail = (
+            "./app/templates/reset_pwd_template.html"
+            if not "app" in str(Path.cwd()).split("/")
+            else "./templates/reset_pwd_template.html"
+        )
+        # build up text for email from template
+        textMail = await readResetPasswordMailTemplate(pathVerifyEmail, strLinkResetPwd)
+        # send email to user to reset password
+        await send_mail_async(
+            [user.email],
+            "Request reset passworf for your IEMAP accoutn received",
+            textMail,
+        )
 
     async def on_after_request_verify(
         self, user: UserAuth, token: str, request: Optional[Request] = None
@@ -94,7 +119,19 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[UserAuth, PydanticObjectId]):
         # retrieve requested url to use for link to embend in email sent to user
         strBaseRequest = str(request.url).split("auth/request-verify-token")[0]
         strEndpointVerifyByEmail = "auth/verify-email/"
-        strLinkVerifyEmail = strBaseRequest + strEndpointVerifyByEmail + token
+
+        # OLD LINK
+        # strLinkVerifyEmail = strBaseRequest + strEndpointVerifyByEmail + token
+
+        # NEW LINK for account activation
+        # this link in used in the frontend to activate the account
+        # the activation token is sent via email to the user and passed to the frontend
+        # as a query parameter (token_activation), if present the frontend will call
+        # the backend to activate the account using the endpoint /auth/verify
+        # and then redirect the user to the login page
+        strLinkVerifyEmail = (
+            f"{frontend}/auth/account-confirm/?token_activation={token}"
+        )
         pathVerifyEmail = (
             "./app/templates/mail_template.html"
             if not "app" in str(Path.cwd()).split("/")
