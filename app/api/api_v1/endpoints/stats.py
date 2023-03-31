@@ -74,7 +74,8 @@ async def stats_project(
 ):
 
     # dictionary result aggreation pipeline
-    result = await iemap_formulas_elements(db)
+    result = await project_stat_user(db, user.id)
+    # iemap_formulas_elements(db)
     if type(result) is dict:
         return {"data": result}
     # return a JSON response as
