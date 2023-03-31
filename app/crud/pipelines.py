@@ -132,7 +132,7 @@ def get_proj_stats_by_user(email: str) -> dict:
                     {
                         "$match": {
                             "$and": [
-                                {"provenance.email": "sergio.ferlito@enea.it"},
+                                {"provenance.email": email},
                                 {"files": {"$exists": True}},
                             ]
                         }
@@ -143,7 +143,7 @@ def get_proj_stats_by_user(email: str) -> dict:
                     {
                         "$match": {
                             "$and": [
-                                {"provenance.email": "sergio.ferlito@enea.it"},
+                                {"provenance.email": email"},
                                 {"files": {"$exists": True}},
                             ]
                         }
@@ -158,7 +158,7 @@ def get_proj_stats_by_user(email: str) -> dict:
                 "total": {"$arrayElemAt": ["$countTotal.total", 0]},
                 "totalByUser": {"$arrayElemAt": ["$countByUser.total", 0]},
                 "totalByUserWithFile": {"$arrayElemAt": ["$countHavingFiles.total", 0]},
-                "totalByUserCountFiles": {"$first": "$totalFiles.count"},
+                "totalByUserCountFiles": {"$arrayElemAt": ["$totalFiles.count", 0]},
             }
         },
     ]
