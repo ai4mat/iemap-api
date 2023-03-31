@@ -143,7 +143,7 @@ def get_proj_stats_by_user(email: str) -> dict:
                     {
                         "$match": {
                             "$and": [
-                                {"provenance.email": email"},
+                                {"provenance.email": email},
                                 {"files": {"$exists": True}},
                             ]
                         }
