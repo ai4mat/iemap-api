@@ -44,6 +44,7 @@ from crud.projects import (
     add_property,
     check_documents_having_files_with_hash,
     count_projects,
+    delete_projects,
     find_all_project_paginated,
     find_proj_having_file_with_hash,
     list_project_properties_files,
@@ -55,6 +56,7 @@ from crud.projects import (
 from models.iemap import (
     PropertyFile,
     PropertyForm,
+    listProjID,
     newProject as NewProjectModel,
     newProjectResponse,
     # PydanticObjectId,
@@ -80,6 +82,7 @@ upload_dir = Config.files_dir
 
 # Get the current user (active or not)¶
 current_user = fastapi_users.current_user(verified=True)
+
 
 # http://0.0.0.0:8001/api/v1/project/list/?page_size=1&page_number=3
 # GET ALL PROJECTS PAGINATED (using skip & limit)
@@ -144,7 +147,6 @@ async def show_projects(
     page_size: Optional[int] = 10,
     page_number: Optional[int] = 1,
 ):
-
     # id is a ObjectId
     n_docs = await count_projects(db)
     page_tot = n_docs // page_size
@@ -192,6 +194,36 @@ async def add_new_project(
     # content=json.dumps(dict(project), default=str)
     # JSONResponse(content=json.dumps(dict(project), default=str))
     return newProjectResponse(inserted_id=id)
+
+
+# http://0.0.0.0:8001/api/v1/projects/delete
+@router.delete("/project/delete", tags=["projects"], status_code=status.HTTP_200_OK)
+async def add_new_project(
+    ids: listProjID,
+    db: AsyncIOMotorClient = Depends(get_database),
+    # COMMENT user:...below TO REMOVE AUTHORIZATION ~~~~~~~~~~~~~~~
+    # IF USER ACCOUNT IS NOT VERIFIED IT RETURNS FORBIDDEN ~~~~~~~~~~~~~~~~
+    # Options defined in current_user RULE how authentication works, see below
+    # https://fastapi-users.github.io/fastapi-users/10.1/usage/current-user/?h=verified#get-the-current-active-and-verified-user
+    user: UserAuth = Depends(current_user),
+) -> newProjectResponse:
+    """Delete existing projects
+
+    Args:
+        db (AsyncIOMotorClient, optional): Motor client connection to MongoDB. Defaults to Depends(get_database).
+        list_id (List[BsonObjectId]): list of MongoDB documents id to delete.
+
+    Returns:
+       count (int): number of deleted documents
+    """
+
+    # RETRIEVE USER EMAIL FROM JWT
+    email = user.email
+    # print(f"delete_projects: {[id for id in ids.list_id]} {email}")
+    count = await delete_projects(db, ids=ids, email=email)
+    # content=json.dumps(dict(project), default=str)
+    # JSONResponse(content=json.dumps(dict(project), default=str))
+    return {"count": count}
 
 
 # ADD PROJECT FILE
