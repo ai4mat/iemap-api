@@ -1,9 +1,10 @@
 import json
 from pprint import pprint
 from typing import List
-
+from bson.objectid import ObjectId as BsonObjectId
+from pydantic import EmailStr
 from core.utils import get_value_float_or_str
-from models.iemap import FileProject, Property, queryModel
+from models.iemap import FileProject, ObjectIdStr, Property, queryModel
 
 from db.mongodb import AsyncIOMotorClient
 from bson.objectid import ObjectId
@@ -30,6 +31,32 @@ async def add_project(conn: AsyncIOMotorClient, project: IEMAPModel):
     return result.inserted_id
 
 
+# delete projects by id, but only if they belong to the user
+
+
+async def delete_projects(
+    conn: AsyncIOMotorClient, email: EmailStr, ids: List[ObjectIdStr]
+):
+    """Delete projects by id, but only if they belong to the user (email got from JWT)
+
+    Args:
+        conn (AsyncIOMotorClient): Motor MongoDB client connection
+        email (EmailStr): string with user's email (extracted from JWT)
+        ids (List[ObjectIdStr]): list of project's ObjectdIds to delete
+
+    Returns:
+        count (int): number of deleted documents
+    """
+    # build up delete query
+    delete_query = {
+        "provenance.email": email,
+        "_id": {"$in": [id for id in ids.list_id]},
+    }
+    # result is of type pymongo.results.DeleteResult
+    result = await conn[database_name][ai4mat_collection_name].delete_many(delete_query)
+    return result.deleted_count
+
+
 async def list_projects(conn: AsyncIOMotorClient, limit, skip):
     """Function to list all projects in DB
 
@@ -54,7 +81,6 @@ async def list_projects(conn: AsyncIOMotorClient, limit, skip):
 async def list_project_properties_files(
     conn: AsyncIOMotorClient, affiliation: str, useremail: str
 ):
-
     """Function returns `page_size` number of documents after last_id
     and the new last_id.
     """
@@ -324,7 +350,6 @@ async def find_all_project_paginated(
 
 
 async def exec_query(conn: AsyncIOMotorClient, qp: queryModel):
-
     limit = qp.limit
     skip = qp.skip
     # read sort from query params if
