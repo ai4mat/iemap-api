@@ -210,6 +210,8 @@ class newProject(BaseModel):
         validate_assignment = True
         # arbitrary_types_allowed = True
 
+class listProjID(BaseModel):
+    list_id: List[ObjectIdStr]
 
 class newProjectResponse(BaseModel):
     inserted_id: PydanticObjectId
